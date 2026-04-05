@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Table, Button, Space, Modal, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
 import { getInvoiceList, deleteInvoice } from '../../api/invoice';
 import InvoiceModal from './InvoiceModal';
 
@@ -47,7 +48,7 @@ const InvoiceList = () => {
     { title: '客户名', dataIndex: 'customerName', key: 'customerName' },
     { title: '客户地址', dataIndex: 'customerAddress', key: 'customerAddress' },
     { title: '开票人', dataIndex: 'operater', key: 'operater' },
-    { title: '开票时间', dataIndex: 'invoiceTime', key: 'invoiceTime' },
+    { title: '开票时间', dataIndex: 'invoiceTime', key: 'invoiceTime', render: (v: string) => v ? dayjs(v).format('YYYY-MM-DD HH:mm') : '-' },
     { title: '总金额', dataIndex: 'totalMoney', key: 'totalMoney', render: (val: number) => `¥${val?.toFixed(2) || '0.00'}` },
     {
       title: '操作', key: 'action',

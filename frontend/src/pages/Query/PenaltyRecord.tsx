@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Table, Form, Input, Button, Space, DatePicker, message } from 'antd';
+import dayjs from 'dayjs';
 import { getPenaltyList } from '../../api/penalty';
 
 const PenaltyRecord = () => {
@@ -30,7 +31,7 @@ const PenaltyRecord = () => {
   const columns = [
     { title: '客户名', dataIndex: 'customerName', key: 'customerName' },
     { title: '罚款金额', dataIndex: 'penalty', key: 'penalty', render: (v: number) => `¥${v?.toFixed(2)}` },
-    { title: '罚款时间', dataIndex: 'penaltyTime', key: 'penaltyTime' },
+    { title: '罚款时间', dataIndex: 'penaltyTime', key: 'penaltyTime', render: (v: string) => v ? dayjs(v).format('YYYY-MM-DD HH:mm') : '-' },
     { title: '备注', dataIndex: 'comment', key: 'comment' },
   ];
   return (

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Table, Form, Input, Button, Space, DatePicker, message } from 'antd';
+import dayjs from 'dayjs';
 import { getPaymentList } from '../../api/payment';
 
 const PaymentRecord = () => {
@@ -30,7 +31,7 @@ const PaymentRecord = () => {
   const columns = [
     { title: '客户名', dataIndex: 'customerName', key: 'customerName' },
     { title: '付款金额', dataIndex: 'payment', key: 'payment', render: (v: number) => `¥${v?.toFixed(2)}` },
-    { title: '付款时间', dataIndex: 'paymentTime', key: 'paymentTime' },
+    { title: '付款时间', dataIndex: 'paymentTime', key: 'paymentTime', render: (v: string) => v ? dayjs(v).format('YYYY-MM-DD HH:mm') : '-' },
     { title: '备注', dataIndex: 'comment', key: 'comment' },
   ];
   return (

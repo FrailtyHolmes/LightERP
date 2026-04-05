@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Table, Button, Space, Modal, Form, Input, InputNumber, DatePicker, Select, message } from 'antd';
+import { Table, Button, Modal, Form, Input, InputNumber, DatePicker, Select, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
 import { getPaymentList, createPayment, deletePayment } from '../../api/payment';
 import { getAllCustomers } from '../../api/customer';
 
@@ -57,7 +58,7 @@ const PaymentList = () => {
     { title: '客户名', dataIndex: 'customerName', key: 'customerName' },
     { title: '客户地址', dataIndex: 'customerAddress', key: 'customerAddress' },
     { title: '付款金额', dataIndex: 'payment', key: 'payment', render: (val: number) => `¥${val?.toFixed(2) || '0.00'}` },
-    { title: '付款时间', dataIndex: 'paymentTime', key: 'paymentTime' },
+    { title: '付款时间', dataIndex: 'paymentTime', key: 'paymentTime', render: (v: string) => v ? dayjs(v).format('YYYY-MM-DD HH:mm') : '-' },
     { title: '备注', dataIndex: 'comment', key: 'comment' },
     { title: '操作', key: 'action', render: (_: any, r: any) => <Button type="link" danger onClick={() => handleDelete(r.paymentId)}>删除</Button> },
   ];

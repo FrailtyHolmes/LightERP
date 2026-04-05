@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Table, Form, Input, Button, Space, DatePicker, message } from 'antd';
+import dayjs from 'dayjs';
 import { getInvoiceList } from '../../api/invoice';
 
 const InvoiceRecord = () => {
@@ -36,7 +37,7 @@ const InvoiceRecord = () => {
     { title: '发票ID', dataIndex: 'invoiceId', key: 'invoiceId' },
     { title: '客户名', dataIndex: 'customerName', key: 'customerName' },
     { title: '开票人', dataIndex: 'operater', key: 'operater' },
-    { title: '开票时间', dataIndex: 'invoiceTime', key: 'invoiceTime' },
+    { title: '开票时间', dataIndex: 'invoiceTime', key: 'invoiceTime', render: (v: string) => v ? dayjs(v).format('YYYY-MM-DD HH:mm') : '-' },
     { title: '总金额', dataIndex: 'totalMoney', key: 'totalMoney', render: (v: number) => `¥${v?.toFixed(2)}` },
   ];
 

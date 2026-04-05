@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form, Input, InputNumber, DatePicker, Select, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
 import { getPenaltyList, createPenalty, deletePenalty } from '../../api/penalty';
 import { getAllCustomers } from '../../api/customer';
 
@@ -57,7 +58,7 @@ const PenaltyList = () => {
     { title: '客户名', dataIndex: 'customerName', key: 'customerName' },
     { title: '客户地址', dataIndex: 'customerAddress', key: 'customerAddress' },
     { title: '罚款金额', dataIndex: 'penalty', key: 'penalty', render: (val: number) => `¥${val?.toFixed(2) || '0.00'}` },
-    { title: '罚款时间', dataIndex: 'penaltyTime', key: 'penaltyTime' },
+    { title: '罚款时间', dataIndex: 'penaltyTime', key: 'penaltyTime', render: (v: string) => v ? dayjs(v).format('YYYY-MM-DD HH:mm') : '-' },
     { title: '备注', dataIndex: 'comment', key: 'comment' },
     { title: '操作', key: 'action', render: (_: any, r: any) => <Button type="link" danger onClick={() => handleDelete(r.penaltyId)}>删除</Button> },
   ];
