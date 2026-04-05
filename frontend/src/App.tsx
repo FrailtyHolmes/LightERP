@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import { useEffect } from 'react';
 import { useAuthStore } from './store/useAuthStore';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import MainLayout from './components/Layout/MainLayout';
 import Dashboard from './pages/Dashboard';
 import InvoiceList from './pages/Invoice';
@@ -54,6 +55,7 @@ function App() {
       <Routes>
         {/* 公开路由 */}
         <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+        <Route path="/register" element={user ? <Navigate to="/" replace /> : <Register />} />
 
         {/* 受保护的路由 */}
         <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>

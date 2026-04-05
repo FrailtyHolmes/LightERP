@@ -10,7 +10,7 @@
 import { useState } from 'react';
 import { Form, Input, Button, Card, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 import { login } from '../../api/auth';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -144,6 +144,11 @@ const Login = () => {
             >
               登录
             </Button>
+          </Form.Item>
+
+          {/* 跳转注册 */}
+          <Form.Item style={{ marginBottom: 0, textAlign: 'center' }}>
+            没有账号？<Link to="/register">去注册</Link>
           </Form.Item>
         </Form>
       </Card>
