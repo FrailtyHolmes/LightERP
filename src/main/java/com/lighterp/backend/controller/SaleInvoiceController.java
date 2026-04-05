@@ -9,6 +9,7 @@ import com.lighterp.backend.common.Constants;
 import com.lighterp.backend.common.PageResult;
 import com.lighterp.backend.config.SessionUtils;
 import com.lighterp.backend.controller.request.SaleInvoiceCreateRequest;
+import com.lighterp.backend.controller.request.SaleInvoiceEditRequest;
 import com.lighterp.backend.controller.response.SaleInvoiceDetailResponse;
 import com.lighterp.backend.controller.response.SaleInvoiceResponse;
 import com.lighterp.backend.controller.response.SaleProductResponse;
@@ -284,6 +285,84 @@ public class SaleInvoiceController {
 
         log.info("删除发票: {}", id);
         return CommonResult.success();
+    }
+
+    /**
+     * 编辑发票
+     */
+    @PutMapping("/{id}")
+    @Transactional(rollbackFor = Exception.class)
+    public CommonResult<SaleInvoiceResponse> update(
+            @PathVariable String id,
+            @Validated @RequestBody SaleInvoiceEditRequest request) {
+        SessionUtils.checkAdmin();
+
+        SaleInvoice existingInvoice = saleInvoiceMapper.selectById(id);
+        if (existingInvoice == null) {
+            throw new BusinessException("发票不存在");
+        }
+
+        // 检查客户是否存在
+        CustomerInfo customer = customerInfoMapper.selectById(request.getCustomerId());
+        if (customer == null) {
+            throw new BusinessException("该客户未注册，请先注册");
+        }
+
+        // 计算出库总金额
+        BigDecimal totalProductMoney = BigDecimal.ZERO;
+        if (!CollectionUtils.isEmpty(request.getProducts())) {
+            for (SaleProduct product : request.getProducts()) {
+                ProductInfo productInfo = productInfoMapper.selectById(product.getProductId());
+                if (productInfo == null) {
+                    throw new BusinessException("该产品未注册，请先注册");
+                }
+
+                if (product.getProductPrice() != null && product.getProductNum() != null) {
+                    product.setProductMoney(product.getProductPrice().multiply(new BigDecimal(product.getProductNum())));
+                }
+
+                if (product.getProductMoney() != null) {
+                    totalProductMoney = totalProductMoney.add(product.getProductMoney());
+                }
+            }
+        }
+
+        // 计算总金额
+        BigDecimal totalMoney = totalProductMoney;
+        if (request.getIsFreeShipping() != null && !request.getIsFreeShipping()) {
+            if (request.getShippingFee() != null) {
+                totalMoney = totalMoney.add(request.getShippingFee());
+            }
+        }
+
+        // 更新发票
+        SaleInvoice invoice = new SaleInvoice();
+        invoice.setInvoiceId(id);
+        invoice.setCustomerId(request.getCustomerId());
+        invoice.setInvoiceTime(request.getInvoiceTime());
+        invoice.setOperater(request.getOperater());
+        invoice.setIsFreeShipping(request.getIsFreeShipping());
+        invoice.setShippingFee(request.getShippingFee());
+        invoice.setComment(request.getComment());
+        invoice.setTotalMoney(totalMoney);
+        saleInvoiceMapper.updateById(invoice);
+
+        // 删除旧出库产品，创建新的
+        saleProductMapper.delete(new QueryWrapper<SaleProduct>().eq("invoice_id", id));
+        if (!CollectionUtils.isEmpty(request.getProducts())) {
+            for (SaleProduct product : request.getProducts()) {
+                product.setInvoiceId(id);
+                product.setCustomerId(request.getCustomerId());
+                product.setOperater(request.getOperater());
+                saleProductMapper.insert(product);
+            }
+        }
+
+        log.info("编辑发票: {}", id);
+
+        SaleInvoiceResponse response = new SaleInvoiceResponse();
+        BeanUtils.copyProperties(invoice, response);
+        return CommonResult.success(response);
     }
 
     /**
