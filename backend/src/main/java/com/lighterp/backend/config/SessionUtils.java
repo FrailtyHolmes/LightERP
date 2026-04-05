@@ -23,14 +23,23 @@ public class SessionUtils {
     }
 
     /**
-     * 获取当前 Session
+     * 获取当前 Session（不创建新的）
      */
     public static HttpSession getSession() {
+        return getSession(false);
+    }
+
+    /**
+     * 获取当前 Session
+     *
+     * @param create 如果为 true，当 Session 不存在时创建新的；如果为 false，不存在时返回 null
+     */
+    public static HttpSession getSession(boolean create) {
         HttpServletRequest request = getRequest();
         if (request == null) {
             return null;
         }
-        return request.getSession(false);
+        return request.getSession(create);
     }
 
     /**
@@ -80,10 +89,10 @@ public class SessionUtils {
     }
 
     /**
-     * 设置当前用户信息
+     * 设置当前用户信息（会自动创建 Session）
      */
     public static void setCurrentUser(Long userId, String userName, String userAccount, Integer userStatus) {
-        HttpSession session = getSession();
+        HttpSession session = getSession(true);
         if (session != null) {
             session.setAttribute(SESSION_KEY_USER_ID, userId);
             session.setAttribute(SESSION_KEY_USER_NAME, userName);
