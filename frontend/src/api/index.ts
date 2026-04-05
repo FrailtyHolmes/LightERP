@@ -62,7 +62,15 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response: AxiosResponse) => {
     console.log(`[API Response] ${response.config.url}`, response.status);
-    return response.data;
+    const responseData = response.data;
+
+    // 检查业务状态码，非200视为业务错误
+    if (responseData?.code !== undefined && responseData.code !== 200) {
+      console.warn(`[API Business Error] ${response.config.url}`, responseData.code, responseData.message);
+      return Promise.reject(responseData);
+    }
+
+    return responseData;
   },
   (error: AxiosError) => {
     console.error('[API Response Error]', error.response?.status, error.message);
