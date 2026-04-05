@@ -211,7 +211,7 @@ ALTER TABLE customer_penalty
         FOREIGN KEY (customer_id) REFERENCES customer_info (customer_id);
 
 -- ============================================
--- 导出示例数据(可选)
+-- 初始化数据
 -- ============================================
--- INSERT INTO user_info (user_id, user_name, user_account, user_password, user_status, created_time, modified_time, modified_user, deleted)
--- VALUES (1, '管理员', '123456', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 2, NOW(), NOW(), 1, 0);
+INSERT INTO user_info (user_id, user_name, user_account, user_password, user_status, created_time, modified_time, modified_user, deleted)
+VALUES (1, '向秋', '15111816282', 'holmes96', 2, NOW(), NOW(), 1, 0);
