@@ -13,6 +13,8 @@ Thumbs.db
 
 # Logs
 *.log
+backend/logs/*.log
+backend/logs/*.log.gz
 
 # Build output
 target/

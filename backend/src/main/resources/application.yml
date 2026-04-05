@@ -30,8 +30,6 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
 
-# 日志配置
+# 日志配置（详细配置见 logback-spring.xml）
 logging:
-  level:
-    com.lighterp.backend: debug
-    org.springframework: info
+  config: classpath:logback-spring.xml
