@@ -1,0 +1,20 @@
+# 忽略 worktree 目录
+.worktrees/
+worktrees/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Build output
+target/
+dist/
+build/
