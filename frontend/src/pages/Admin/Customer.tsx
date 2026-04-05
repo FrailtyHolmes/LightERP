@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, message } from 'antd';
-import { getCustomerList, createCustomer, deleteCustomer } from '../../api/customer';
+import { Table, Button, Modal, Form, Input, Space, message } from 'antd';
+import { getCustomerList, createCustomer, updateCustomer, deleteCustomer } from '../../api/customer';
 
 const CustomerAdmin = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<any>(null);
   const [form] = Form.useForm();
+
+  const isEditing = editingRecord !== null;
 
   const loadData = async () => {
     setLoading(true);
@@ -17,9 +20,36 @@ const CustomerAdmin = () => {
 
   useEffect(() => { loadData(); }, []);
 
+  const openAddModal = () => {
+    setEditingRecord(null);
+    form.resetFields();
+    setModalVisible(true);
+  };
+
+  const openEditModal = (record: any) => {
+    setEditingRecord(record);
+    form.setFieldsValue({ customerName: record.customerName, customerAddress: record.customerAddress, customerPhone: record.customerPhone });
+    setModalVisible(true);
+  };
+
   const handleSubmit = async () => {
-    try { await form.validateFields(); await createCustomer(form.getFieldsValue()); message.success('添加成功'); setModalVisible(false); form.resetFields(); loadData(); }
-    catch (error: any) { message.error(error.message || '添加失败'); }
+    try {
+      await form.validateFields();
+      const values = form.getFieldsValue();
+
+      if (isEditing) {
+        await updateCustomer(editingRecord.customerId, values);
+        message.success('编辑成功');
+      } else {
+        await createCustomer(values);
+        message.success('添加成功');
+      }
+
+      setModalVisible(false);
+      form.resetFields();
+      setEditingRecord(null);
+      loadData();
+    } catch (error: any) { message.error(error.message || '操作失败'); }
   };
 
   const handleDelete = async (id: number) => {
@@ -30,14 +60,19 @@ const CustomerAdmin = () => {
     { title: '客户名', dataIndex: 'customerName', key: 'customerName' },
     { title: '客户地址', dataIndex: 'customerAddress', key: 'customerAddress' },
     { title: '联系方式', dataIndex: 'customerPhone', key: 'customerPhone' },
-    { title: '操作', key: 'action', render: (_: any, r: any) => <Button type="link" danger onClick={() => handleDelete(r.customerId)}>删除</Button> },
+    { title: '操作', key: 'action', render: (_: any, r: any) => (
+      <Space>
+        <Button type="link" onClick={() => openEditModal(r)}>编辑</Button>
+        <Button type="link" danger onClick={() => handleDelete(r.customerId)}>删除</Button>
+      </Space>
+    )},
   ];
 
   return (
     <div>
-      <div style={{marginBottom: 16}}><Button type="primary" onClick={() => setModalVisible(true)}>添加客户</Button></div>
+      <div style={{marginBottom: 16}}><Button type="primary" onClick={openAddModal}>添加客户</Button></div>
       <Table dataSource={data} columns={columns} rowKey="customerId" loading={loading} />
-      <Modal title="添加客户" open={modalVisible} onCancel={() => setModalVisible(false)} onOk={handleSubmit}>
+      <Modal title={isEditing ? '编辑客户' : '添加客户'} open={modalVisible} onCancel={() => { setModalVisible(false); setEditingRecord(null); }} onOk={handleSubmit} destroyOnClose>
         <Form form={form} layout="vertical">
           <Form.Item name="customerName" label="客户名" rules={[{required: true}]}><Input /></Form.Item>
           <Form.Item name="customerAddress" label="客户地址" rules={[{required: true}]}><Input /></Form.Item>

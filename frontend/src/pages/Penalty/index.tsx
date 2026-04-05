@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Table, Button, Space, Modal, Form, Input, InputNumber, DatePicker, Select, message } from 'antd';
+import { Table, Button, Modal, Form, Input, InputNumber, DatePicker, Select, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { getPenaltyList, createPenalty, deletePenalty } from '../../api/penalty';
 import { getAllCustomers } from '../../api/customer';
@@ -80,8 +80,8 @@ const PenaltyList = () => {
           <Form.Item name="penaltyTime" label="罚款时间">
             <DatePicker style={{ width: '100%' }} />
           </Form.Item>
-          <Form.Item name="comment" label="备注" initialValue="罚款原因">
-            <Input.TextArea rows={2} />
+          <Form.Item name="comment" label="备注">
+            <Input.TextArea rows={2} placeholder="请输入罚款原因" />
           </Form.Item>
         </Form>
       </Modal>
