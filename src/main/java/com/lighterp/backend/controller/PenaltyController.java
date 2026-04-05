@@ -117,11 +117,11 @@ public class PenaltyController {
         wrapper.orderByDesc("created_time");
         Page<CustomerPenalty> result = penaltyMapper.selectPage(pageParam, wrapper);
 
-        Map<Long, CustomerInfo> customerMap = new HashMap<>();
+        final Map<Long, CustomerInfo> customerMap = new HashMap<>();
         if (!result.getRecords().isEmpty()) {
             List<Long> cIds = result.getRecords().stream().map(CustomerPenalty::getCustomerId).distinct().collect(Collectors.toList());
             List<CustomerInfo> cList = customerInfoMapper.selectBatchIds(cIds);
-            customerMap = cList.stream().collect(Collectors.toMap(CustomerInfo::getCustomerId, c -> c));
+            customerMap.putAll(cList.stream().collect(Collectors.toMap(CustomerInfo::getCustomerId, c -> c)));
         }
 
         PageResult<CustomerPenaltyResponse> pageResult = PageResult.of(
@@ -134,7 +134,7 @@ public class PenaltyController {
                         response.setCustomerAddress(c.getCustomerAddress());
                     }
                     return response;
-                }).toList(),
+                }).collect(Collectors.toList()),
                 result.getTotal(),
                 (int) result.getCurrent(),
                 (int) result.getSize()

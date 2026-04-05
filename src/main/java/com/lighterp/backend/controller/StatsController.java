@@ -132,7 +132,7 @@ public class StatsController {
         }
 
         QueryWrapper<SaleInvoice> wrapper = new QueryWrapper<>();
-        wrapper.eq(true, "1=1"); // 确保不会因为空条件出错
+        // 查询所有未删除的记录
         if (startDate != null) {
             wrapper.ge("created_time", startDate);
         }

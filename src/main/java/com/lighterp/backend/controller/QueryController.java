@@ -69,11 +69,12 @@ public class QueryController {
         // 填充产品信息
         Set<Long> productIds = result.getRecords().stream()
                 .map(SaleProduct::getProductId).collect(Collectors.toSet());
-        Map<Long, ProductInfo> productMap = new HashMap<>();
+        Map<Long, ProductInfo> productMapTemp = new HashMap<>();
         if (!productIds.isEmpty()) {
             List<ProductInfo> products = productInfoMapper.selectBatchIds(productIds);
-            productMap = products.stream().collect(Collectors.toMap(ProductInfo::getProductId, p -> p));
+            productMapTemp = products.stream().collect(Collectors.toMap(ProductInfo::getProductId, p -> p));
         }
+        final Map<Long, ProductInfo> productMap = productMapTemp;
 
         // 查询所有记录用于计算总金额（不分页）
         List<SaleProduct> allProducts = saleProductMapper.selectList(wrapper);

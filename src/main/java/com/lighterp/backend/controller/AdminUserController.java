@@ -19,6 +19,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.stream.Collectors;
+
 /**
  * 后台管理 - 用户管理
  */
@@ -65,7 +67,7 @@ public class AdminUserController {
                     UserInfoResponse response = new UserInfoResponse();
                     BeanUtils.copyProperties(userInfo, response);
                     return response;
-                }).toList(),
+                }).collect(Collectors.toList()),
                 result.getTotal(),
                 (int) result.getCurrent(),
                 (int) result.getSize()

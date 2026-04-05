@@ -32,6 +32,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -188,25 +189,28 @@ public class SaleInvoiceController {
         wrapper.orderByDesc("created_time");
         Page<SaleInvoice> result = saleInvoiceMapper.selectPage(pageParam, wrapper);
 
-        // 填充客户信息
-        Map<Long, CustomerInfo> customerMap = new HashMap<>();
+        // 填充客户信息 - 使用final避免lambda变量问题
+        final Map<Long, CustomerInfo> customerMap = new HashMap<>();
         if (!result.getRecords().isEmpty()) {
             List<Long> cIds = result.getRecords().stream().map(SaleInvoice::getCustomerId).distinct().collect(Collectors.toList());
             List<CustomerInfo> cList = customerInfoMapper.selectBatchIds(cIds);
-            customerMap = cList.stream().collect(Collectors.toMap(CustomerInfo::getCustomerId, c -> c));
+            customerMap.putAll(cList.stream().collect(Collectors.toMap(CustomerInfo::getCustomerId, c -> c)));
         }
+
+        // 使用临时变量避免lambda引用问题
+        final Map<Long, CustomerInfo> customerMapFinal = customerMap;
 
         PageResult<SaleInvoiceResponse> pageResult = PageResult.of(
                 result.getRecords().stream().map(invoice -> {
                     SaleInvoiceResponse response = new SaleInvoiceResponse();
                     BeanUtils.copyProperties(invoice, response);
-                    CustomerInfo c = customerMap.get(invoice.getCustomerId());
+                    CustomerInfo c = customerMapFinal.get(invoice.getCustomerId());
                     if (c != null) {
                         response.setCustomerName(c.getCustomerName());
                         response.setCustomerAddress(c.getCustomerAddress());
                     }
                     return response;
-                }).toList(),
+                }).collect(Collectors.toList()),
                 result.getTotal(),
                 (int) result.getCurrent(),
                 (int) result.getSize()
@@ -241,12 +245,13 @@ public class SaleInvoiceController {
         );
 
         // 填充产品信息
-        Map<Long, ProductInfo> productMap = new HashMap<>();
+        Map<Long, ProductInfo> productMapTemp = new HashMap<>();
         if (!products.isEmpty()) {
             List<Long> pIds = products.stream().map(SaleProduct::getProductId).distinct().collect(Collectors.toList());
             List<ProductInfo> pList = productInfoMapper.selectBatchIds(pIds);
-            productMap = pList.stream().collect(Collectors.toMap(ProductInfo::getProductId, p -> p));
+            productMapTemp = pList.stream().collect(Collectors.toMap(ProductInfo::getProductId, p -> p));
         }
+        final Map<Long, ProductInfo> productMap = productMapTemp;
 
         List<SaleProductResponse> productResponses = products.stream().map(p -> {
             SaleProductResponse pr = new SaleProductResponse();
@@ -387,9 +392,14 @@ public class SaleInvoiceController {
         StringBuilder result = new StringBuilder();
         char[] chars = cn.toCharArray();
         for (char c : chars) {
-            String[] pinyins = PinyinHelper.toHanyuPinyinStringArray(c, format);
-            if (pinyins != null && pinyins.length > 0) {
-                result.append(pinyins[0]);
+            try {
+                String[] pinyins = PinyinHelper.toHanyuPinyinStringArray(c, format);
+                if (pinyins != null && pinyins.length > 0) {
+                    result.append(pinyins[0]);
+                }
+            } catch (net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination e) {
+                log.warn("拼音转换失败: {}", c, e);
+                result.append(c);
             }
         }
         return result.toString();

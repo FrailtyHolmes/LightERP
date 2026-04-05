@@ -115,11 +115,11 @@ public class PaymentController {
         Page<CustomerPayment> result = paymentMapper.selectPage(pageParam, wrapper);
 
         // 填充客户信息
-        Map<Long, CustomerInfo> customerMap = new HashMap<>();
+        final Map<Long, CustomerInfo> customerMap = new HashMap<>();
         if (!result.getRecords().isEmpty()) {
             List<Long> cIds = result.getRecords().stream().map(CustomerPayment::getCustomerId).distinct().collect(Collectors.toList());
             List<CustomerInfo> cList = customerInfoMapper.selectBatchIds(cIds);
-            customerMap = cList.stream().collect(Collectors.toMap(CustomerInfo::getCustomerId, c -> c));
+            customerMap.putAll(cList.stream().collect(Collectors.toMap(CustomerInfo::getCustomerId, c -> c)));
         }
 
         PageResult<CustomerPaymentResponse> pageResult = PageResult.of(
@@ -132,7 +132,7 @@ public class PaymentController {
                         response.setCustomerAddress(c.getCustomerAddress());
                     }
                     return response;
-                }).toList(),
+                }).collect(Collectors.toList()),
                 result.getTotal(),
                 (int) result.getCurrent(),
                 (int) result.getSize()

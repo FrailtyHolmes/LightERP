@@ -74,7 +74,7 @@ public class AdminProductController {
                     ProductInfoResponse response = new ProductInfoResponse();
                     BeanUtils.copyProperties(info, response);
                     return response;
-                }).toList(),
+                }).collect(Collectors.toList()),
                 result.getTotal(),
                 (int) result.getCurrent(),
                 (int) result.getSize()

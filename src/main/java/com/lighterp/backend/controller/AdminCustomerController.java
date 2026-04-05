@@ -67,7 +67,7 @@ public class AdminCustomerController {
                     CustomerInfoResponse response = new CustomerInfoResponse();
                     BeanUtils.copyProperties(info, response);
                     return response;
-                }).toList(),
+                }).collect(Collectors.toList()),
                 result.getTotal(),
                 (int) result.getCurrent(),
                 (int) result.getSize()

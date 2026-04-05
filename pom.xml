@@ -23,8 +23,8 @@
     <properties>
         <java.version>17</java.version>
         <mybatis-plus.version>3.5.3.1</mybatis-plus.version>
-        < Lombok.version>1.18.30</ Lombok.version>
-        <fastjson.version>2.0.43</fastjson.version>
+        <lombok.version>1.18.30</lombok.version>
+        <fastjson.version>2.0.32</fastjson.version>
         <poi.version>5.2.5</poi.version>
     </properties>
 
@@ -50,8 +50,8 @@
 
         <!-- MySQL Driver -->
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
             <version>8.0.33</version>
         </dependency>
 
@@ -63,9 +63,9 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- FastJson -->
+        <!-- FastJson (兼容版) -->
         <dependency>
-            <groupId>com.alibaba</groupId>
+            <groupId>com.alibaba.fastjson2</groupId>
             <artifactId>fastjson2</artifactId>
             <version>${fastjson.version}</version>
         </dependency>

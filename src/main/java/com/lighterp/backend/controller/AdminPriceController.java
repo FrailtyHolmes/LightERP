@@ -89,7 +89,7 @@ public class AdminPriceController {
                         response.setPriceDisplay("未添加单价");
                     }
                     return response;
-                }).toList(),
+                }).collect(Collectors.toList()),
                 result.getTotal(),
                 (int) result.getCurrent(),
                 (int) result.getSize()
