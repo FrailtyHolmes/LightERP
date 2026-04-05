@@ -21,7 +21,7 @@ public class CustomerPayment extends BaseEntity {
     /**
      * 付款ID
      */
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableId(type = IdType.AUTO)
     private Long paymentId;
 
     /**

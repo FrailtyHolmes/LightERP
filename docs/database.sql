@@ -15,7 +15,7 @@ USE lighterp;
 -- ============================================
 DROP TABLE IF EXISTS user_info;
 CREATE TABLE user_info (
-    user_id         BIGINT         PRIMARY KEY COMMENT '用户ID(雪花算法生成)',
+    user_id         BIGINT         AUTO_INCREMENT PRIMARY KEY COMMENT '用户ID(自增)',
     user_name       VARCHAR(50)    NOT NULL COMMENT '用户名',
     user_account    VARCHAR(18)    NOT NULL UNIQUE COMMENT '用户账号(6-18位数字)',
     user_password   VARCHAR(100)   NOT NULL COMMENT '用户密码(Bcrypt加密)',
@@ -34,7 +34,7 @@ CREATE TABLE user_info (
 -- ============================================
 DROP TABLE IF EXISTS customer_info;
 CREATE TABLE customer_info (
-    customer_id     BIGINT         PRIMARY KEY COMMENT '客户ID(雪花算法生成)',
+    customer_id     BIGINT         AUTO_INCREMENT PRIMARY KEY COMMENT '客户ID(自增)',
     customer_name   VARCHAR(100)   NOT NULL COMMENT '客户名',
     customer_address VARCHAR(200)  NOT NULL COMMENT '客户地址',
     customer_phone  VARCHAR(20)    COMMENT '联系方式',
@@ -52,7 +52,7 @@ CREATE TABLE customer_info (
 -- ============================================
 DROP TABLE IF EXISTS product_info;
 CREATE TABLE product_info (
-    product_id      BIGINT         PRIMARY KEY COMMENT '产品ID(雪花算法生成)',
+    product_id      BIGINT         AUTO_INCREMENT PRIMARY KEY COMMENT '产品ID(自增)',
     product_name    VARCHAR(100)   NOT NULL COMMENT '产品名',
     product_volume  VARCHAR(50)    NOT NULL COMMENT '净含量',
     product_size    VARCHAR(50)    NOT NULL COMMENT '规格',
@@ -71,7 +71,7 @@ CREATE TABLE product_info (
 -- ============================================
 DROP TABLE IF EXISTS customer_product_price;
 CREATE TABLE customer_product_price (
-    id                  BIGINT         PRIMARY KEY COMMENT '主键ID(雪花算法生成)',
+    id                  BIGINT         AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID(自增)',
     customer_id         BIGINT         NOT NULL COMMENT 'customer_info的主键',
     product_id          BIGINT         NOT NULL COMMENT 'product_info的主键',
     price               DECIMAL(12,2)  COMMENT '单价',
@@ -115,7 +115,7 @@ CREATE TABLE sale_invoice (
 -- ============================================
 DROP TABLE IF EXISTS sale_product;
 CREATE TABLE sale_product (
-    id                  BIGINT         PRIMARY KEY COMMENT '主键ID(雪花算法生成)',
+    id                  BIGINT         AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID(自增)',
     invoice_id          VARCHAR(50)    NOT NULL COMMENT 'sale_invoice的主键',
     customer_id         BIGINT         NOT NULL COMMENT 'customer_info的主键',
     product_id          BIGINT         NOT NULL COMMENT 'product_info的主键',
@@ -138,7 +138,7 @@ CREATE TABLE sale_product (
 -- ============================================
 DROP TABLE IF EXISTS customer_payment;
 CREATE TABLE customer_payment (
-    payment_id         BIGINT         PRIMARY KEY COMMENT '主键ID(雪花算法生成)',
+    payment_id         BIGINT         AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID(自增)',
     customer_id        BIGINT         NOT NULL COMMENT 'customer_info的主键',
     payment            DECIMAL(12,2)  NOT NULL COMMENT '付款金额',
     payment_time       DATE           NOT NULL COMMENT '付款时间',
@@ -157,7 +157,7 @@ CREATE TABLE customer_payment (
 -- ============================================
 DROP TABLE IF EXISTS customer_penalty;
 CREATE TABLE customer_penalty (
-    penalty_id         BIGINT         PRIMARY KEY COMMENT '主键ID(雪花算法生成)',
+    penalty_id         BIGINT         AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID(自增)',
     customer_id        BIGINT         NOT NULL COMMENT 'customer_info的主键',
     penalty            DECIMAL(12,2)  NOT NULL COMMENT '罚款金额',
     penalty_time       DATE           COMMENT '罚款日期',

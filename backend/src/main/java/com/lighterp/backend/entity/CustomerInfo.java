@@ -22,9 +22,9 @@ public class CustomerInfo extends BaseEntity {
 
     /**
      * 客户ID
-     * 采用雪花算法自动生成
+     * 数据库自增生成
      */
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableId(type = IdType.AUTO)
     private Long customerId;
 
     /**
