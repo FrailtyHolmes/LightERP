@@ -6,6 +6,7 @@ import com.lighterp.backend.common.Constants;
 import com.lighterp.backend.config.SessionUtils;
 import com.lighterp.backend.controller.request.LoginRequest;
 import com.lighterp.backend.controller.request.RegisterRequest;
+import com.lighterp.backend.controller.request.UserUpdateRequest;
 import com.lighterp.backend.controller.response.UserInfoResponse;
 import com.lighterp.backend.entity.UserInfo;
 import com.lighterp.backend.mapper.UserInfoMapper;
@@ -163,6 +164,52 @@ public class AuthController {
         }
 
         log.debug("获取当前用户信息: {}", userInfo.getUserAccount());
+
+        UserInfoResponse response = new UserInfoResponse();
+        BeanUtils.copyProperties(userInfo, response);
+        return CommonResult.success(response);
+    }
+
+    /**
+     * 编辑个人信息
+     *
+     * 当前登录用户可修改自己的用户名和密码，不可修改账号和权限
+     *
+     * @param request 更新请求，包含userName和password（均为可选）
+     * @return 更新后的用户信息
+     * @throws BusinessException 用户未登录或用户不存在
+     */
+    @PutMapping("/profile")
+    public CommonResult<UserInfoResponse> updateProfile(@Validated @RequestBody UserUpdateRequest request) {
+        Long userId = SessionUtils.getCurrentUserId();
+        if (userId == null) {
+            throw new BusinessException(401, "用户未登录");
+        }
+
+        UserInfo userInfo = userInfoMapper.selectById(userId);
+        if (userInfo == null) {
+            log.error("编辑个人信息失败：用户不存在，ID: {}", userId);
+            throw new BusinessException("用户不存在");
+        }
+
+        if (request.getUserName() != null) {
+            userInfo.setUserName(request.getUserName());
+        }
+        if (request.getPassword() != null) {
+            userInfo.setUserPassword(request.getPassword());
+        }
+
+        userInfoMapper.updateById(userInfo);
+
+        // 同步更新 Session 中的用户名
+        SessionUtils.setCurrentUser(
+                userInfo.getUserId(),
+                userInfo.getUserName(),
+                userInfo.getUserAccount(),
+                userInfo.getUserStatus()
+        );
+
+        log.info("用户编辑个人信息成功: {}", userInfo.getUserAccount());
 
         UserInfoResponse response = new UserInfoResponse();
         BeanUtils.copyProperties(userInfo, response);

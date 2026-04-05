@@ -14,11 +14,13 @@ import {
 import { logout } from '../../api/auth';
 import { useAuthStore } from '../../store/useAuthStore';
 import message from 'antd/es/message';
+import ProfileEditModal from '../ProfileEditModal';
 
 const { Header, Sider, Content } = Layout;
 
 const MainLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [profileModalVisible, setProfileModalVisible] = useState(false);
   const { user, setUser } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
@@ -49,7 +51,7 @@ const MainLayout = () => {
 
   const userMenu = {
     items: [
-      { key: 'profile', icon: <UserOutlined />, label: '编辑个人信息' },
+      { key: 'profile', icon: <UserOutlined />, label: '编辑个人信息', onClick: () => setProfileModalVisible(true) },
       { type: 'divider' as const },
       { key: 'logout', icon: <LogoutOutlined />, label: '下线', onClick: handleLogout },
     ],
@@ -78,6 +80,11 @@ const MainLayout = () => {
           <Outlet />
         </Content>
       </Layout>
+
+      <ProfileEditModal
+        visible={profileModalVisible}
+        onClose={() => setProfileModalVisible(false)}
+      />
     </Layout>
   );
 };

@@ -88,6 +88,25 @@ export const register = (data: RegisterParams) =>
   api.post<any, any>('/auth/register', data);
 
 /**
+ * 编辑个人信息参数
+ */
+interface UpdateProfileParams {
+  userName?: string;
+  password?: string;
+}
+
+/**
+ * 编辑个人信息
+ *
+ * 当前登录用户可修改自己的用户名和密码
+ *
+ * @param data - 更新参数，userName和password均为可选
+ * @returns Promise，包含更新后的用户信息
+ */
+export const updateProfile = (data: UpdateProfileParams) =>
+  api.put<any, any>('/auth/profile', data);
+
+/**
  * 获取当前登录用户信息
  *
  * 用于检查用户登录状态和获取用户详情
