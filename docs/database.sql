@@ -172,6 +172,41 @@ CREATE TABLE customer_penalty (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户罚款表';
 
 -- ============================================
+-- 外键约束
+-- ============================================
+
+-- 客户-产品单价表 → 客户信息表、产品信息表
+ALTER TABLE customer_product_price
+    ADD CONSTRAINT fk_cpp_customer_id
+        FOREIGN KEY (customer_id) REFERENCES customer_info (customer_id),
+    ADD CONSTRAINT fk_cpp_product_id
+        FOREIGN KEY (product_id) REFERENCES product_info (product_id);
+
+-- 出库发票表 → 客户信息表
+ALTER TABLE sale_invoice
+    ADD CONSTRAINT fk_si_customer_id
+        FOREIGN KEY (customer_id) REFERENCES customer_info (customer_id);
+
+-- 出库产品表 → 出库发票表、客户信息表、产品信息表
+ALTER TABLE sale_product
+    ADD CONSTRAINT fk_sp_invoice_id
+        FOREIGN KEY (invoice_id) REFERENCES sale_invoice (invoice_id),
+    ADD CONSTRAINT fk_sp_customer_id
+        FOREIGN KEY (customer_id) REFERENCES customer_info (customer_id),
+    ADD CONSTRAINT fk_sp_product_id
+        FOREIGN KEY (product_id) REFERENCES product_info (product_id);
+
+-- 客户货款表 → 客户信息表
+ALTER TABLE customer_payment
+    ADD CONSTRAINT fk_cpay_customer_id
+        FOREIGN KEY (customer_id) REFERENCES customer_info (customer_id);
+
+-- 客户罚款表 → 客户信息表
+ALTER TABLE customer_penalty
+    ADD CONSTRAINT fk_cpen_customer_id
+        FOREIGN KEY (customer_id) REFERENCES customer_info (customer_id);
+
+-- ============================================
 -- 导出示例数据(可选)
 -- ============================================
 -- INSERT INTO user_info (user_id, user_name, user_account, user_password, user_status, created_time, modified_time, modified_user, deleted)

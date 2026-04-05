@@ -24,7 +24,7 @@ public class ProductInfo extends BaseEntity {
      * 产品ID
      * 采用雪花算法自动生成
      */
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long productId;
 
     /**

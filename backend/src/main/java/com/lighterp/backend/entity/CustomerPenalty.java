@@ -21,7 +21,7 @@ public class CustomerPenalty extends BaseEntity {
     /**
      * 罚款ID
      */
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long penaltyId;
 
     /**
