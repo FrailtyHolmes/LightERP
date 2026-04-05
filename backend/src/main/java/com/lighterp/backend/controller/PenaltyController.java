@@ -54,10 +54,6 @@ public class PenaltyController {
 
         CustomerPenalty penalty = new CustomerPenalty();
         BeanUtils.copyProperties(request, penalty);
-        // 设置默认备注
-        if (!StringUtils.hasText(penalty.getComment())) {
-            penalty.setComment(Constants.Business.PENALTY_DEFAULT_COMMENT);
-        }
         penaltyMapper.insert(penalty);
 
         log.info("录入罚款: customerId={}, penalty={}", request.getCustomerId(), request.getPenalty());

@@ -11,16 +11,26 @@ const UserAdmin = () => {
 
   const isEditing = editingRecord !== null;
 
-  const loadData = async () => {
+  const [searchForm] = Form.useForm();
+
+  const loadData = async (filters?: any) => {
     setLoading(true);
     try {
-      const res = await api.get('/admin/user/list');
+      const params = filters || searchForm.getFieldsValue();
+      const cleanParams: any = {};
+      if (params.userName) cleanParams.userName = params.userName;
+      if (params.userAccount) cleanParams.userAccount = params.userAccount;
+      if (params.userStatus !== undefined && params.userStatus !== null) cleanParams.userStatus = params.userStatus;
+      const res = await api.get('/admin/user/list', { params: cleanParams });
       setData(res.data.list || []);
     } catch (error: any) { message.error(error.message || '加载失败'); }
     finally { setLoading(false); }
   };
 
   useEffect(() => { loadData(); }, []);
+
+  const handleSearch = () => loadData();
+  const handleReset = () => { searchForm.resetFields(); loadData({}); };
 
   const openAddModal = () => {
     setEditingRecord(null);
@@ -69,6 +79,19 @@ const UserAdmin = () => {
 
   return (
     <div>
+      <Form form={searchForm} layout="inline" style={{ marginBottom: 16 }}>
+        <Form.Item name="userName"><Input placeholder="用户名" allowClear /></Form.Item>
+        <Form.Item name="userAccount"><Input placeholder="用户账号" allowClear /></Form.Item>
+        <Form.Item name="userStatus">
+          <Select placeholder="权限" allowClear style={{ width: 120 }} options={[{value: 0, label: '浏览者'}, {value: 1, label: '管理员'}, {value: 2, label: '超级管理员'}]} />
+        </Form.Item>
+        <Form.Item>
+          <Space>
+            <Button type="primary" onClick={handleSearch}>搜索</Button>
+            <Button onClick={handleReset}>重置</Button>
+          </Space>
+        </Form.Item>
+      </Form>
       <div style={{marginBottom: 16}}><Button type="primary" onClick={openAddModal}>添加用户</Button></div>
       <Table dataSource={data} columns={columns} rowKey="userId" loading={loading} />
       <Modal title={isEditing ? '编辑用户' : '添加用户'} open={modalVisible} onCancel={() => { setModalVisible(false); setEditingRecord(null); }} onOk={handleSubmit} destroyOnClose>

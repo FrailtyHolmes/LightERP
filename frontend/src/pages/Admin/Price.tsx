@@ -14,10 +14,18 @@ const PriceAdmin = () => {
 
   const isEditing = editingRecord !== null;
 
-  const loadData = async () => {
+  const [searchForm] = Form.useForm();
+
+  const loadData = async (filters?: any) => {
     setLoading(true);
-    try { const res = await api.get('/admin/price/list'); setData(res.data.list || []); }
-    catch (error: any) { message.error(error.message || '加载失败'); }
+    try {
+      const params = filters || searchForm.getFieldsValue();
+      const cleanParams: any = {};
+      if (params.customerId) cleanParams.customerId = params.customerId;
+      if (params.productId) cleanParams.productId = params.productId;
+      const res = await api.get('/admin/price/list', { params: cleanParams });
+      setData(res.data.list || []);
+    } catch (error: any) { message.error(error.message || '加载失败'); }
     finally { setLoading(false); }
   };
 
@@ -29,6 +37,9 @@ const PriceAdmin = () => {
   };
 
   useEffect(() => { loadData(); loadOptions(); }, []);
+
+  const handleSearch = () => loadData();
+  const handleReset = () => { searchForm.resetFields(); loadData({}); };
 
   const openAddModal = () => {
     setEditingRecord(null);
@@ -88,6 +99,20 @@ const PriceAdmin = () => {
 
   return (
     <div>
+      <Form form={searchForm} layout="inline" style={{ marginBottom: 16 }}>
+        <Form.Item name="customerId">
+          <Select placeholder="选择客户" allowClear style={{ width: 160 }} options={customers.map(c => ({value: c.customerId, label: c.customerName}))} />
+        </Form.Item>
+        <Form.Item name="productId">
+          <Select placeholder="选择产品" allowClear style={{ width: 160 }} options={products.map(p => ({value: p.productId, label: p.productName}))} />
+        </Form.Item>
+        <Form.Item>
+          <Space>
+            <Button type="primary" onClick={handleSearch}>搜索</Button>
+            <Button onClick={handleReset}>重置</Button>
+          </Space>
+        </Form.Item>
+      </Form>
       <div style={{marginBottom: 16}}><Button type="primary" onClick={openAddModal}>添加单价</Button></div>
       <Table dataSource={data} columns={columns} rowKey="id" loading={loading} />
       <Modal title={isEditing ? '编辑单价' : '添加单价'} open={modalVisible} onCancel={() => { setModalVisible(false); setEditingRecord(null); }} onOk={handleSubmit} destroyOnClose>

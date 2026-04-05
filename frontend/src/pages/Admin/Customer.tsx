@@ -11,14 +11,25 @@ const CustomerAdmin = () => {
 
   const isEditing = editingRecord !== null;
 
-  const loadData = async () => {
+  const [searchForm] = Form.useForm();
+
+  const loadData = async (filters?: any) => {
     setLoading(true);
-    try { const res = await getCustomerList(); setData(res.data.list || []); }
-    catch (error: any) { message.error(error.message || '加载失败'); }
+    try {
+      const params = filters || searchForm.getFieldsValue();
+      const cleanParams: any = {};
+      if (params.customerName) cleanParams.customerName = params.customerName;
+      if (params.customerAddress) cleanParams.customerAddress = params.customerAddress;
+      const res = await getCustomerList(cleanParams);
+      setData(res.data.list || []);
+    } catch (error: any) { message.error(error.message || '加载失败'); }
     finally { setLoading(false); }
   };
 
   useEffect(() => { loadData(); }, []);
+
+  const handleSearch = () => loadData();
+  const handleReset = () => { searchForm.resetFields(); loadData({}); };
 
   const openAddModal = () => {
     setEditingRecord(null);
@@ -70,6 +81,16 @@ const CustomerAdmin = () => {
 
   return (
     <div>
+      <Form form={searchForm} layout="inline" style={{ marginBottom: 16 }}>
+        <Form.Item name="customerName"><Input placeholder="客户名" allowClear /></Form.Item>
+        <Form.Item name="customerAddress"><Input placeholder="客户地址" allowClear /></Form.Item>
+        <Form.Item>
+          <Space>
+            <Button type="primary" onClick={handleSearch}>搜索</Button>
+            <Button onClick={handleReset}>重置</Button>
+          </Space>
+        </Form.Item>
+      </Form>
       <div style={{marginBottom: 16}}><Button type="primary" onClick={openAddModal}>添加客户</Button></div>
       <Table dataSource={data} columns={columns} rowKey="customerId" loading={loading} />
       <Modal title={isEditing ? '编辑客户' : '添加客户'} open={modalVisible} onCancel={() => { setModalVisible(false); setEditingRecord(null); }} onOk={handleSubmit} destroyOnClose>
