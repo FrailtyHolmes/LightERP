@@ -11,9 +11,20 @@ CREATE DATABASE IF NOT EXISTS lighterp
 USE lighterp;
 
 -- ============================================
+-- 按外键依赖反序删除表（先删子表再删父表）
+-- ============================================
+DROP TABLE IF EXISTS customer_penalty;
+DROP TABLE IF EXISTS customer_payment;
+DROP TABLE IF EXISTS sale_product;
+DROP TABLE IF EXISTS sale_invoice;
+DROP TABLE IF EXISTS customer_product_price;
+DROP TABLE IF EXISTS product_info;
+DROP TABLE IF EXISTS customer_info;
+DROP TABLE IF EXISTS user_info;
+
+-- ============================================
 -- 1. 用户信息表
 -- ============================================
-DROP TABLE IF EXISTS user_info;
 CREATE TABLE user_info (
     user_id         BIGINT         AUTO_INCREMENT PRIMARY KEY COMMENT '用户ID(自增)',
     user_name       VARCHAR(50)    NOT NULL COMMENT '用户名',
@@ -32,7 +43,6 @@ CREATE TABLE user_info (
 -- ============================================
 -- 2. 客户信息表
 -- ============================================
-DROP TABLE IF EXISTS customer_info;
 CREATE TABLE customer_info (
     customer_id     BIGINT         AUTO_INCREMENT PRIMARY KEY COMMENT '客户ID(自增)',
     customer_name   VARCHAR(100)   NOT NULL COMMENT '客户名',
@@ -50,7 +60,6 @@ CREATE TABLE customer_info (
 -- ============================================
 -- 3. 产品信息表
 -- ============================================
-DROP TABLE IF EXISTS product_info;
 CREATE TABLE product_info (
     product_id      BIGINT         AUTO_INCREMENT PRIMARY KEY COMMENT '产品ID(自增)',
     product_name    VARCHAR(100)   NOT NULL COMMENT '产品名',
@@ -69,7 +78,6 @@ CREATE TABLE product_info (
 -- ============================================
 -- 4. 客户-产品单价表
 -- ============================================
-DROP TABLE IF EXISTS customer_product_price;
 CREATE TABLE customer_product_price (
     id                  BIGINT         AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID(自增)',
     customer_id         BIGINT         NOT NULL COMMENT 'customer_info的主键',
@@ -90,7 +98,6 @@ CREATE TABLE customer_product_price (
 -- ============================================
 -- 5. 出库发票表
 -- ============================================
-DROP TABLE IF EXISTS sale_invoice;
 CREATE TABLE sale_invoice (
     invoice_id         VARCHAR(50)    PRIMARY KEY COMMENT '发票ID(SALE+时间+开票人拼音)',
     customer_id        BIGINT         NOT NULL COMMENT 'customer_info的主键',
@@ -113,7 +120,6 @@ CREATE TABLE sale_invoice (
 -- ============================================
 -- 6. 出库产品表
 -- ============================================
-DROP TABLE IF EXISTS sale_product;
 CREATE TABLE sale_product (
     id                  BIGINT         AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID(自增)',
     invoice_id          VARCHAR(50)    NOT NULL COMMENT 'sale_invoice的主键',
@@ -136,7 +142,6 @@ CREATE TABLE sale_product (
 -- ============================================
 -- 7. 客户货款表
 -- ============================================
-DROP TABLE IF EXISTS customer_payment;
 CREATE TABLE customer_payment (
     payment_id         BIGINT         AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID(自增)',
     customer_id        BIGINT         NOT NULL COMMENT 'customer_info的主键',
@@ -155,7 +160,6 @@ CREATE TABLE customer_payment (
 -- ============================================
 -- 8. 客户罚款表
 -- ============================================
-DROP TABLE IF EXISTS customer_penalty;
 CREATE TABLE customer_penalty (
     penalty_id         BIGINT         AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID(自增)',
     customer_id        BIGINT         NOT NULL COMMENT 'customer_info的主键',
