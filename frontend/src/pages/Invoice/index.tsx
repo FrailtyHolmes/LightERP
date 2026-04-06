@@ -1,15 +1,21 @@
-import { useState, useEffect } from 'react';
-import { Table, Button, Space, Modal, message } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { useState, useEffect, useRef } from 'react';
+import { Table, Button, Space, Modal, Card, Form, Input, Select, DatePicker, InputNumber, message } from 'antd';
+import { UnorderedListOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { getInvoiceList, deleteInvoice } from '../../api/invoice';
-import InvoiceModal from './InvoiceModal';
+import { getInvoiceList, deleteInvoice, createInvoice } from '../../api/invoice';
+import { getAllCustomers } from '../../api/customer';
+
+type ViewMode = 'create' | 'list';
 
 const InvoiceList = () => {
+  const [viewMode, setViewMode] = useState<ViewMode>('create');
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [customers, setCustomers] = useState([] as any[]);
+  const [submitting, setSubmitting] = useState(false);
+  const [form] = Form.useForm();
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
+  const lastValuesRef = useRef<any>(null);
 
   const loadData = async (page = 1, size = 10) => {
     setLoading(true);
@@ -24,9 +30,43 @@ const InvoiceList = () => {
     }
   };
 
+  const loadCustomers = async () => {
+    try {
+      const res = await getAllCustomers();
+      setCustomers(res.data || []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
-    loadData();
+    loadCustomers();
+    // 恢复上次填写的内容
+    if (lastValuesRef.current) {
+      form.setFieldsValue(lastValuesRef.current);
+    }
   }, []);
+
+  const switchToList = () => {
+    setViewMode('list');
+    loadData();
+  };
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    try {
+      const values = await form.validateFields();
+      await createInvoice(values);
+      message.success('提交成功');
+      // 保留上次提交的内容
+      lastValuesRef.current = values;
+    } catch (error: any) {
+      if (error?.errorFields) return; // 表单校验失败，不提示
+      message.error(error.message || '提交失败');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleDelete = async (id: string) => {
     Modal.confirm({
@@ -60,22 +100,55 @@ const InvoiceList = () => {
     },
   ];
 
+  if (viewMode === 'list') {
+    return (
+      <div>
+        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+          <h1>出库发票</h1>
+          <Button type="primary" onClick={() => setViewMode('create')}>新建发票</Button>
+        </div>
+        <Table
+          dataSource={data}
+          columns={columns}
+          rowKey="invoiceId"
+          loading={loading}
+          pagination={{ ...pagination, onChange: (page, size) => loadData(page, size) }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div>
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
-        <h1>出库发票</h1>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>
-          新建发票
-        </Button>
+        <h1>新建出库发票</h1>
+        <Button icon={<UnorderedListOutlined />} onClick={switchToList}>查看历史记录</Button>
       </div>
-      <Table
-        dataSource={data}
-        columns={columns}
-        rowKey="invoiceId"
-        loading={loading}
-        pagination={{ ...pagination, onChange: (page, size) => loadData(page, size) }}
-      />
-      <InvoiceModal visible={modalVisible} onClose={() => setModalVisible(false)} onSuccess={() => { setModalVisible(false); loadData(); }} />
+      <Card>
+        <Form form={form} layout="vertical" style={{ maxWidth: 600 }}>
+          <Form.Item name="customerId" label="客户" rules={[{ required: true, message: '请选择客户' }]}>
+            <Select showSearch placeholder="选择客户" options={customers.map((c: any) => ({ value: c.customerId, label: c.customerName + ' - ' + c.customerAddress }))} />
+          </Form.Item>
+          <Form.Item name="invoiceTime" label="开票日期" rules={[{ required: true, message: '请选择开票日期' }]}>
+            <DatePicker style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="operater" label="开票人" rules={[{ required: true, message: '请输入开票人' }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="isFreeShipping" label="运费承担" initialValue={false}>
+            <Select options={[{ value: true, label: '生产商付' }, { value: false, label: '客户付' }]} />
+          </Form.Item>
+          <Form.Item name="shippingFee" label="运费金额">
+            <InputNumber min={0} style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="comment" label="备注">
+            <Input.TextArea rows={2} placeholder="补废xx、赠送xx" />
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" onClick={handleSubmit} loading={submitting}>提交</Button>
+          </Form.Item>
+        </Form>
+      </Card>
     </div>
   );
 };

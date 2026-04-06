@@ -100,15 +100,13 @@ public class StatsController {
                 response.setCustomerId(customerId);
                 response.setCustomerName(customer.getCustomerName());
                 response.setCustomerAddress(customer.getCustomerAddress());
-                // 使用 customerPhone 字段暂存未付款金额
-                // 这里添加一个扩展字段来存储未付款金额，简化处理
+                response.setUnpaidAmount(unpaid);
                 result.add(response);
             }
         }
 
-        // 按未付款金额排序，取前10
-        // 由于没有存储未付款金额，这里简化处理，实际应该存储后再排序
-        // 按客户名长度（或其他方式）模拟排序
+        // 按未付款金额降序排序，取前10
+        result.sort((a, b) -> b.getUnpaidAmount().compareTo(a.getUnpaidAmount()));
         result = result.subList(0, Math.min(10, result.size()));
 
         return CommonResult.success(result);

@@ -2,6 +2,8 @@ package com.lighterp.backend.controller.response;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 /**
  * 客户信息响应
  */
@@ -11,4 +13,5 @@ public class CustomerInfoResponse {
     private String customerName;
     private String customerAddress;
     private String customerPhone;
+    private BigDecimal unpaidAmount;
 }

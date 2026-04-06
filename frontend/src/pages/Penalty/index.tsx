@@ -1,17 +1,21 @@
-import { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, InputNumber, DatePicker, Select, message } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { useState, useEffect, useRef } from 'react';
+import { Table, Button, Modal, Form, Input, InputNumber, DatePicker, Select, Card, message } from 'antd';
+import { UnorderedListOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { getPenaltyList, createPenalty, deletePenalty } from '../../api/penalty';
 import { getAllCustomers } from '../../api/customer';
 
+type ViewMode = 'create' | 'list';
+
 const PenaltyList = () => {
+  const [viewMode, setViewMode] = useState<ViewMode>('create');
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
   const [customers, setCustomers] = useState([] as any[]);
+  const [submitting, setSubmitting] = useState(false);
   const [form] = Form.useForm();
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
+  const lastValuesRef = useRef<any>(null);
 
   const loadData = async (page = 1, size = 10) => {
     setLoading(true);
@@ -26,25 +30,39 @@ const PenaltyList = () => {
     }
   };
 
-  useEffect(() => { loadData(); loadCustomers(); }, []);
-
   const loadCustomers = async () => {
     try {
       const res = await getAllCustomers();
       setCustomers(res.data || []);
-    } catch {}
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    loadCustomers();
+    if (lastValuesRef.current) {
+      form.setFieldsValue(lastValuesRef.current);
+    }
+  }, []);
+
+  const switchToList = () => {
+    setViewMode('list');
+    loadData();
   };
 
   const handleSubmit = async () => {
+    setSubmitting(true);
     try {
       const values = await form.validateFields();
       await createPenalty(values);
       message.success('提交成功');
-      setModalVisible(false);
-      form.resetFields();
-      loadData();
+      lastValuesRef.current = values;
     } catch (error: any) {
+      if (error?.errorFields) return;
       message.error(error.message || '提交失败');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -63,15 +81,26 @@ const PenaltyList = () => {
     { title: '操作', key: 'action', render: (_: any, r: any) => <Button type="link" danger onClick={() => handleDelete(r.penaltyId)}>删除</Button> },
   ];
 
+  if (viewMode === 'list') {
+    return (
+      <div>
+        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+          <h1>罚款录入</h1>
+          <Button type="primary" onClick={() => setViewMode('create')}>录入罚款</Button>
+        </div>
+        <Table dataSource={data} columns={columns} rowKey="penaltyId" loading={loading} pagination={{...pagination, onChange: (p, s) => loadData(p, s)}} />
+      </div>
+    );
+  }
+
   return (
     <div>
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
-        <h1>罚款录入</h1>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>录入罚款</Button>
+        <h1>录入罚款</h1>
+        <Button icon={<UnorderedListOutlined />} onClick={switchToList}>查看历史记录</Button>
       </div>
-      <Table dataSource={data} columns={columns} rowKey="penaltyId" loading={loading} pagination={{...pagination, onChange: (p, s) => loadData(p, s)}} />
-      <Modal title="录入罚款" open={modalVisible} onCancel={() => setModalVisible(false)} onOk={handleSubmit} width={500}>
-        <Form form={form} layout="vertical">
+      <Card>
+        <Form form={form} layout="vertical" style={{ maxWidth: 600 }}>
           <Form.Item name="customerId" label="客户" rules={[{ required: true }]}>
             <Select placeholder="选择客户" options={customers.map(c => ({ value: c.customerId, label: c.customerName }))} />
           </Form.Item>
@@ -84,8 +113,11 @@ const PenaltyList = () => {
           <Form.Item name="comment" label="备注">
             <Input.TextArea rows={2} placeholder="请输入罚款原因" />
           </Form.Item>
+          <Form.Item>
+            <Button type="primary" onClick={handleSubmit} loading={submitting}>提交</Button>
+          </Form.Item>
         </Form>
-      </Modal>
+      </Card>
     </div>
   );
 };

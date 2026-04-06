@@ -33,6 +33,7 @@ const Dashboard = () => {
   const columns = [
     { title: '客户名', dataIndex: 'customerName', key: 'customerName' },
     { title: '客户地址', dataIndex: 'customerAddress', key: 'customerAddress' },
+    { title: '未付款金额', dataIndex: 'unpaidAmount', key: 'unpaidAmount', render: (val: number) => val != null ? `¥${Number(val).toFixed(2)}` : '-' },
   ];
 
   return (
