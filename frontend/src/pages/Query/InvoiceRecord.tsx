@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Table, Form, Input, Button, Space, DatePicker, InputNumber, Select, Modal, Card, Divider, Typography, message } from 'antd';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { getInvoiceList, getInvoiceDetail, updateInvoice } from '../../api/invoice';
+import { getInvoiceList, getInvoiceDetail, updateInvoice, deleteInvoice } from '../../api/invoice';
 import { getAllCustomers } from '../../api/customer';
 import { getAllProducts } from '../../api/product';
 
@@ -27,6 +27,9 @@ const InvoiceRecord = () => {
   const [products, setProducts] = useState([] as any[]);
   const [editProducts, setEditProducts] = useState<EditProductRow[]>([]);
   const [editShowShipping, setEditShowShipping] = useState(false);
+  const [detailVisible, setDetailVisible] = useState(false);
+  const [detailData, setDetailData] = useState<any>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const loadData = async (page = 1, size = 10, filters?: any) => {
     setLoading(true);
@@ -69,6 +72,37 @@ const InvoiceRecord = () => {
 
   const handleSearch = () => loadData(1, pagination.pageSize);
   const handleReset = () => { searchForm.resetFields(); loadData(1, pagination.pageSize, {}); };
+
+  const handleViewDetail = async (invoiceId: string) => {
+    setDetailLoading(true);
+    setDetailVisible(true);
+    try {
+      const res = await getInvoiceDetail(invoiceId);
+      setDetailData(res.data);
+    } catch (error: any) {
+      message.error(error.message || '获取详情失败');
+      setDetailVisible(false);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const handleDelete = (invoiceId: string) => {
+    Modal.confirm({
+      title: '确认删除该发票？',
+      content: '删除后将同时删除该发票下的所有出库产品记录，且会影响对账数据。此操作不可恢复。',
+      okType: 'danger',
+      onOk: async () => {
+        try {
+          await deleteInvoice(invoiceId);
+          message.success('删除成功');
+          loadData(pagination.current, pagination.pageSize);
+        } catch (error: any) {
+          message.error(error.message || '删除失败');
+        }
+      },
+    });
+  };
 
   const handleEdit = async (invoiceId: string) => {
     try {
@@ -143,12 +177,17 @@ const InvoiceRecord = () => {
   };
 
   const columns = [
-    { title: '发票ID', dataIndex: 'invoiceId', key: 'invoiceId' },
+    { title: '发票ID', dataIndex: 'invoiceId', key: 'invoiceId', render: (v: string) => <Button type="link" style={{ padding: 0 }} onClick={() => handleViewDetail(v)}>{v}</Button> },
     { title: '客户名', dataIndex: 'customerName', key: 'customerName' },
     { title: '开票人', dataIndex: 'operater', key: 'operater' },
     { title: '开票时间', dataIndex: 'invoiceTime', key: 'invoiceTime', render: (v: string) => v ? dayjs(v).format('YYYY-MM-DD HH:mm') : '-' },
     { title: '总金额', dataIndex: 'totalMoney', key: 'totalMoney', render: (v: number) => `¥${v?.toFixed(2)}` },
-    { title: '操作', key: 'action', render: (_: any, record: any) => <Button type="link" onClick={() => handleEdit(record.invoiceId)}>编辑</Button> },
+    { title: '操作', key: 'action', render: (_: any, record: any) => (
+      <Space>
+        <Button type="link" onClick={() => handleEdit(record.invoiceId)}>编辑</Button>
+        <Button type="link" danger onClick={() => handleDelete(record.invoiceId)}>删除</Button>
+      </Space>
+    )},
   ];
 
   return (
@@ -167,6 +206,55 @@ const InvoiceRecord = () => {
       </Form>
       <Table dataSource={data} columns={columns} rowKey="invoiceId" loading={loading} pagination={{...pagination, onChange: (p, s) => loadData(p, s)}} />
 
+      {/* 详情弹窗 */}
+      <Modal title="发票详情" open={detailVisible} onCancel={() => { setDetailVisible(false); setDetailData(null); }} footer={null} width={700}>
+        {detailLoading ? (
+          <div style={{ textAlign: 'center', padding: 40 }}>加载中...</div>
+        ) : detailData ? (
+          <div>
+            <Divider orientation="left">基本信息</Divider>
+            <Space direction="vertical" style={{ width: '100%' }}>
+              <Text><Text strong>发票ID：</Text>{detailData.invoiceId}</Text>
+              <Text><Text strong>客户：</Text>{detailData.customerName}</Text>
+              <Text><Text strong>开票日期：</Text>{detailData.invoiceTime ? dayjs(detailData.invoiceTime).format('YYYY-MM-DD') : '-'}</Text>
+              <Text><Text strong>开票人：</Text>{detailData.operater}</Text>
+              {detailData.comment && <Text><Text strong>备注：</Text>{detailData.comment}</Text>}
+            </Space>
+
+            <Divider orientation="left">出库产品</Divider>
+            <Table
+              dataSource={detailData.products || []}
+              rowKey="productId"
+              pagination={false}
+              size="small"
+              columns={[
+                { title: '产品名', dataIndex: 'productName', key: 'productName' },
+                { title: '规格', dataIndex: 'productVolume', key: 'productVolume' },
+                { title: '尺寸', dataIndex: 'productSize', key: 'productSize' },
+                { title: '单价', dataIndex: 'productPrice', key: 'productPrice', render: (v: number) => `¥${v?.toFixed(2)}` },
+                { title: '数量', dataIndex: 'productNum', key: 'productNum' },
+                { title: '出库金额', dataIndex: 'productMoney', key: 'productMoney', render: (v: number) => `¥${v?.toFixed(2)}` },
+              ]}
+            />
+
+            {(detailData.shippingFee != null || detailData.isFreeShipping != null) && (
+              <>
+                <Divider orientation="left">运费</Divider>
+                <Space direction="vertical">
+                  <Text><Text strong>运费承担方：</Text>{detailData.isFreeShipping ? '生产商出' : '客户出'}</Text>
+                  <Text><Text strong>运费金额：</Text>¥{(detailData.shippingFee || 0).toFixed(2)}</Text>
+                </Space>
+              </>
+            )}
+
+            <Divider />
+            <Text strong style={{ fontSize: 16 }}>总金额：</Text>
+            <Text strong style={{ fontSize: 18, color: '#fa8c16' }}>¥{(detailData.totalMoney || 0).toFixed(2)}</Text>
+          </div>
+        ) : null}
+      </Modal>
+
+      {/* 编辑弹窗 */}
       <Modal title="编辑出库发票" open={editVisible} onCancel={() => setEditVisible(false)} onOk={handleEditSubmit} width={750} afterClose={() => editForm.resetFields()}>
         <Form form={editForm} layout="vertical">
           <Form.Item name="customerId" label="客户" rules={[{ required: true, message: '请选择客户' }]}>

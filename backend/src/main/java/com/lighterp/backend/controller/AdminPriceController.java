@@ -115,12 +115,14 @@ public class AdminPriceController {
             throw new BusinessException("该产品未注册，请先注册");
         }
 
-        // 检查是否已存在该客户+产品记录
+        // 检查是否已存在未删除的同维度记录
         QueryWrapper<CustomerProductPrice> wrapper = new QueryWrapper<>();
         wrapper.eq("customer_id", request.getCustomerId())
                .eq("product_id", request.getProductId());
         if (request.getEffectiveDateStart() != null) {
             wrapper.eq("effective_date_start", request.getEffectiveDateStart());
+        } else {
+            wrapper.isNull("effective_date_start");
         }
 
         Long count = priceMapper.selectCount(wrapper);
@@ -128,7 +130,14 @@ public class AdminPriceController {
             throw new BusinessException("已存在该客户-产品单价记录");
         }
 
-        priceMapper.insert(request);
+        // 检查是否存在已逻辑删除的同维度记录，如果有则恢复
+        Long deletedId = priceMapper.findDeletedRecordId(
+                request.getCustomerId(), request.getProductId(), request.getEffectiveDateStart());
+        if (deletedId != null) {
+            priceMapper.restoreDeletedRecord(deletedId, request.getPrice(), request.getEffectiveDateEnd());
+        } else {
+            priceMapper.insert(request);
+        }
 
         log.info("添加客户产品单价: customerId={}, productId={}", request.getCustomerId(), request.getProductId());
         return CommonResult.success();

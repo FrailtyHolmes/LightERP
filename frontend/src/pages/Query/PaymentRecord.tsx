@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Table, Form, Input, Button, Space, DatePicker, InputNumber, Modal, Select, message } from 'antd';
 import dayjs from 'dayjs';
-import { getPaymentList, updatePayment } from '../../api/payment';
+import { getPaymentList, updatePayment, deletePayment } from '../../api/payment';
 import { getAllCustomers } from '../../api/customer';
 
 const PaymentRecord = () => {
@@ -67,12 +67,34 @@ const PaymentRecord = () => {
     }
   };
 
+  const handleDelete = (paymentId: number) => {
+    Modal.confirm({
+      title: '确认删除该汇款记录？',
+      content: '删除后会影响对账数据，此操作不可恢复。',
+      okType: 'danger',
+      onOk: async () => {
+        try {
+          await deletePayment(paymentId);
+          message.success('删除成功');
+          loadData(pagination.current, pagination.pageSize);
+        } catch (error: any) {
+          message.error(error.message || '删除失败');
+        }
+      },
+    });
+  };
+
   const columns = [
     { title: '客户名', dataIndex: 'customerName', key: 'customerName' },
     { title: '付款金额', dataIndex: 'payment', key: 'payment', render: (v: number) => `¥${v?.toFixed(2)}` },
     { title: '付款时间', dataIndex: 'paymentTime', key: 'paymentTime', render: (v: string) => v ? dayjs(v).format('YYYY-MM-DD HH:mm') : '-' },
     { title: '备注', dataIndex: 'comment', key: 'comment' },
-    { title: '操作', key: 'action', render: (_: any, record: any) => <Button type="link" onClick={() => handleEdit(record)}>编辑</Button> },
+    { title: '操作', key: 'action', render: (_: any, record: any) => (
+      <Space>
+        <Button type="link" onClick={() => handleEdit(record)}>编辑</Button>
+        <Button type="link" danger onClick={() => handleDelete(record.paymentId)}>删除</Button>
+      </Space>
+    )},
   ];
 
   return (

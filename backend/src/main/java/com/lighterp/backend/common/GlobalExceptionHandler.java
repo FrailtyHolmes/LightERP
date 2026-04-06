@@ -1,6 +1,7 @@
 package com.lighterp.backend.common;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -43,6 +44,15 @@ public class GlobalExceptionHandler {
     public CommonResult<Void> handleBusinessException(BusinessException e) {
         log.warn("业务异常: {}", e.getMessage());
         return CommonResult.error(e.getCode(), e.getMessage());
+    }
+
+    /**
+     * 处理数据库唯一键冲突异常
+     */
+    @ExceptionHandler(DuplicateKeyException.class)
+    public CommonResult<Void> handleDuplicateKeyException(DuplicateKeyException e) {
+        log.warn("唯一键冲突: {}", e.getMessage());
+        return CommonResult.error(400, "数据已存在，请勿重复添加");
     }
 
     /**

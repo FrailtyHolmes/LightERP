@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Table, Form, Input, Button, Space, DatePicker, InputNumber, Modal, Select, message } from 'antd';
 import dayjs from 'dayjs';
-import { getPenaltyList, updatePenalty } from '../../api/penalty';
+import { getPenaltyList, updatePenalty, deletePenalty } from '../../api/penalty';
 import { getAllCustomers } from '../../api/customer';
 
 const PenaltyRecord = () => {
@@ -67,12 +67,34 @@ const PenaltyRecord = () => {
     }
   };
 
+  const handleDelete = (penaltyId: number) => {
+    Modal.confirm({
+      title: '确认删除该罚款记录？',
+      content: '删除后会影响对账数据，此操作不可恢复。',
+      okType: 'danger',
+      onOk: async () => {
+        try {
+          await deletePenalty(penaltyId);
+          message.success('删除成功');
+          loadData(pagination.current, pagination.pageSize);
+        } catch (error: any) {
+          message.error(error.message || '删除失败');
+        }
+      },
+    });
+  };
+
   const columns = [
     { title: '客户名', dataIndex: 'customerName', key: 'customerName' },
     { title: '罚款金额', dataIndex: 'penalty', key: 'penalty', render: (v: number) => `¥${v?.toFixed(2)}` },
     { title: '罚款时间', dataIndex: 'penaltyTime', key: 'penaltyTime', render: (v: string) => v ? dayjs(v).format('YYYY-MM-DD HH:mm') : '-' },
     { title: '备注', dataIndex: 'comment', key: 'comment' },
-    { title: '操作', key: 'action', render: (_: any, record: any) => <Button type="link" onClick={() => handleEdit(record)}>编辑</Button> },
+    { title: '操作', key: 'action', render: (_: any, record: any) => (
+      <Space>
+        <Button type="link" onClick={() => handleEdit(record)}>编辑</Button>
+        <Button type="link" danger onClick={() => handleDelete(record.penaltyId)}>删除</Button>
+      </Space>
+    )},
   ];
 
   return (
