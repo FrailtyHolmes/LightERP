@@ -72,8 +72,8 @@ public class PaymentController {
     public CommonResult<PageResult<CustomerPaymentResponse>> list(
             @RequestParam(required = false) Long customerId,
             @RequestParam(required = false) String customerName,
-            @RequestParam(required = false) Date paymentTimeStart,
-            @RequestParam(required = false) Date paymentTimeEnd,
+            @RequestParam(required = false) String paymentTimeStart,
+            @RequestParam(required = false) String paymentTimeEnd,
             @RequestParam(required = false) BigDecimal paymentMin,
             @RequestParam(required = false) BigDecimal paymentMax,
             @RequestParam(defaultValue = "1") Integer page,
@@ -85,10 +85,10 @@ public class PaymentController {
         if (customerId != null) {
             wrapper.eq("customer_id", customerId);
         }
-        if (paymentTimeStart != null) {
+        if (StringUtils.hasText(paymentTimeStart)) {
             wrapper.ge("payment_time", paymentTimeStart);
         }
-        if (paymentTimeEnd != null) {
+        if (StringUtils.hasText(paymentTimeEnd)) {
             wrapper.le("payment_time", paymentTimeEnd);
         }
         if (paymentMin != null) {

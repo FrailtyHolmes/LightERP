@@ -72,8 +72,8 @@ public class PenaltyController {
     public CommonResult<PageResult<CustomerPenaltyResponse>> list(
             @RequestParam(required = false) Long customerId,
             @RequestParam(required = false) String customerName,
-            @RequestParam(required = false) Date penaltyTimeStart,
-            @RequestParam(required = false) Date penaltyTimeEnd,
+            @RequestParam(required = false) String penaltyTimeStart,
+            @RequestParam(required = false) String penaltyTimeEnd,
             @RequestParam(required = false) BigDecimal penaltyMin,
             @RequestParam(required = false) BigDecimal penaltyMax,
             @RequestParam(defaultValue = "1") Integer page,
@@ -85,10 +85,10 @@ public class PenaltyController {
         if (customerId != null) {
             wrapper.eq("customer_id", customerId);
         }
-        if (penaltyTimeStart != null) {
+        if (StringUtils.hasText(penaltyTimeStart)) {
             wrapper.ge("penalty_time", penaltyTimeStart);
         }
-        if (penaltyTimeEnd != null) {
+        if (StringUtils.hasText(penaltyTimeEnd)) {
             wrapper.le("penalty_time", penaltyTimeEnd);
         }
         if (penaltyMin != null) {

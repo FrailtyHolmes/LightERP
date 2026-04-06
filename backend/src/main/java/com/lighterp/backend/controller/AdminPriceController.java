@@ -121,27 +121,27 @@ public class AdminPriceController {
             throw new BusinessException("生效开始日期不能晚于生效结束日期");
         }
 
-        // 检查是否已存在未删除的同维度记录
-        QueryWrapper<CustomerProductPrice> wrapper = new QueryWrapper<>();
-        wrapper.eq("customer_id", request.getCustomerId())
-               .eq("product_id", request.getProductId());
-        if (request.getEffectiveDateStart() != null) {
-            wrapper.eq("effective_date_start", request.getEffectiveDateStart());
-        } else {
-            wrapper.isNull("effective_date_start");
-        }
-
-        Long count = priceMapper.selectCount(wrapper);
-        if (count > 0) {
-            throw new BusinessException("已存在该客户-产品单价记录");
-        }
-
-        // 检查是否存在已逻辑删除的同维度记录，如果有则恢复
+        // 先检查是否存在已逻辑删除的同维度记录，如果有则恢复
         Long deletedId = priceMapper.findDeletedRecordId(
                 request.getCustomerId(), request.getProductId(), request.getEffectiveDateStart());
         if (deletedId != null) {
             priceMapper.restoreDeletedRecord(deletedId, request.getPrice(), request.getEffectiveDateEnd());
         } else {
+            // 检查是否已存在未删除的同维度记录
+            QueryWrapper<CustomerProductPrice> wrapper = new QueryWrapper<>();
+            wrapper.eq("customer_id", request.getCustomerId())
+                   .eq("product_id", request.getProductId());
+            if (request.getEffectiveDateStart() != null) {
+                wrapper.eq("effective_date_start", request.getEffectiveDateStart());
+            } else {
+                wrapper.isNull("effective_date_start");
+            }
+
+            Long count = priceMapper.selectCount(wrapper);
+            if (count > 0) {
+                throw new BusinessException("已存在该客户-产品单价记录");
+            }
+
             priceMapper.insert(request);
         }
 

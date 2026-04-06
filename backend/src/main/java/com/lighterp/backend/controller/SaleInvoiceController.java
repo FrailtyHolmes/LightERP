@@ -151,8 +151,8 @@ public class SaleInvoiceController {
     public CommonResult<PageResult<SaleInvoiceResponse>> list(
             @RequestParam(required = false) Long customerId,
             @RequestParam(required = false) String customerName,
-            @RequestParam(required = false) Date invoiceTimeStart,
-            @RequestParam(required = false) Date invoiceTimeEnd,
+            @RequestParam(required = false) String invoiceTimeStart,
+            @RequestParam(required = false) String invoiceTimeEnd,
             @RequestParam(required = false) String operater,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer pageSize) {
@@ -163,10 +163,10 @@ public class SaleInvoiceController {
         if (customerId != null) {
             wrapper.eq("customer_id", customerId);
         }
-        if (StringUtils.hasText(invoiceTimeStart != null ? invoiceTimeStart.toString() : null)) {
+        if (StringUtils.hasText(invoiceTimeStart)) {
             wrapper.ge("invoice_time", invoiceTimeStart);
         }
-        if (invoiceTimeEnd != null) {
+        if (StringUtils.hasText(invoiceTimeEnd)) {
             wrapper.le("invoice_time", invoiceTimeEnd);
         }
         if (StringUtils.hasText(operater)) {
