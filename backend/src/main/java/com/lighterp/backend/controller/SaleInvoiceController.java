@@ -396,6 +396,9 @@ public class SaleInvoiceController {
                 String[] pinyins = PinyinHelper.toHanyuPinyinStringArray(c, format);
                 if (pinyins != null && pinyins.length > 0) {
                     result.append(pinyins[0]);
+                } else {
+                    // 非中文字符（英文、数字等）直接保留
+                    result.append(Character.toLowerCase(c));
                 }
             } catch (net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination e) {
                 log.warn("拼音转换失败: {}", c, e);

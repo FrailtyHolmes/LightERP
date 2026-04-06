@@ -1,13 +1,27 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, Row, Col, Select, DatePicker, Button, Table, message } from 'antd';
 import dayjs from 'dayjs';
 import api from '../../api';
+import { getAllCustomers } from '../../api/customer';
 
 const Reconciliation = () => {
   const [customerId, setCustomerId] = useState<number | undefined>();
   const [dateRange, setDateRange] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<any>(null);
+  const [customers, setCustomers] = useState([] as any[]);
+
+  useEffect(() => {
+    const loadCustomers = async () => {
+      try {
+        const res = await getAllCustomers();
+        setCustomers(res.data || []);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    loadCustomers();
+  }, []);
 
   const loadData = async () => {
     if (!customerId) { message.warning('请选择客户'); return; }
@@ -32,7 +46,7 @@ const Reconciliation = () => {
       <Card style={{ marginBottom: 16 }}>
         <Row gutter={16} align="middle">
           <Col>客户:</Col>
-          <Col><Select style={{width: 200}} placeholder="选择客户" onChange={setCustomerId} /></Col>
+          <Col><Select style={{width: 200}} showSearch optionFilterProp="label" placeholder="选择客户" onChange={setCustomerId} options={customers.map(c => ({ value: c.customerId, label: c.customerName + ' - ' + c.customerAddress }))} /></Col>
           <Col>日期范围:</Col>
           <Col><DatePicker.RangePicker onChange={(dates) => setDateRange(dates || [])} /></Col>
           <Col><Button type="primary" onClick={loadData} loading={loading}>查询</Button></Col>

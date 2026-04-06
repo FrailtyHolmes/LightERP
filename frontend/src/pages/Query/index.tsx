@@ -1,4 +1,5 @@
 import { Tabs } from 'antd';
+import { useSearchParams } from 'react-router-dom';
 import InvoiceRecord from './InvoiceRecord';
 import PaymentRecord from './PaymentRecord';
 import PenaltyRecord from './PenaltyRecord';
@@ -6,6 +7,9 @@ import SaleProductRecord from './SaleProductRecord';
 import Reconciliation from './Reconciliation';
 
 const Query = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'invoice';
+
   const items = [
     { key: 'invoice', label: '发票记录', children: <InvoiceRecord /> },
     { key: 'payment', label: '客户汇款记录', children: <PaymentRecord /> },
@@ -17,7 +21,7 @@ const Query = () => {
   return (
     <div>
       <h1>查询</h1>
-      <Tabs items={items} />
+      <Tabs activeKey={activeTab} items={items} onChange={(key) => setSearchParams({ tab: key })} />
     </div>
   );
 };

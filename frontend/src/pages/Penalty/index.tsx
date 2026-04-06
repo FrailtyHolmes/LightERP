@@ -1,34 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
-import { Table, Button, Modal, Form, Input, InputNumber, DatePicker, Select, Card, message } from 'antd';
+import { Button, Form, Input, InputNumber, DatePicker, Select, Card, message } from 'antd';
 import { UnorderedListOutlined } from '@ant-design/icons';
-import dayjs from 'dayjs';
-import { getPenaltyList, createPenalty, deletePenalty } from '../../api/penalty';
+import { useNavigate } from 'react-router-dom';
+import { createPenalty } from '../../api/penalty';
 import { getAllCustomers } from '../../api/customer';
 
-type ViewMode = 'create' | 'list';
-
 const PenaltyList = () => {
-  const [viewMode, setViewMode] = useState<ViewMode>('create');
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [customers, setCustomers] = useState([] as any[]);
   const [submitting, setSubmitting] = useState(false);
   const [form] = Form.useForm();
-  const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
   const lastValuesRef = useRef<any>(null);
-
-  const loadData = async (page = 1, size = 10) => {
-    setLoading(true);
-    try {
-      const res = await getPenaltyList({ page, pageSize: size });
-      setData(res.data.list || []);
-      setPagination({ ...pagination, current: page, pageSize: size, total: res.data.total });
-    } catch (error: any) {
-      message.error(error.message || '加载失败');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const navigate = useNavigate();
 
   const loadCustomers = async () => {
     try {
@@ -46,11 +28,6 @@ const PenaltyList = () => {
     }
   }, []);
 
-  const switchToList = () => {
-    setViewMode('list');
-    loadData();
-  };
-
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
@@ -66,38 +43,11 @@ const PenaltyList = () => {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    Modal.confirm({ title: '确认删除？', onOk: async () => {
-      try { await deletePenalty(id); message.success('删除成功'); loadData(); } catch { message.error('删除失败'); }
-    }});
-  };
-
-  const columns = [
-    { title: '客户名', dataIndex: 'customerName', key: 'customerName' },
-    { title: '客户地址', dataIndex: 'customerAddress', key: 'customerAddress' },
-    { title: '罚款金额', dataIndex: 'penalty', key: 'penalty', render: (val: number) => `¥${val?.toFixed(2) || '0.00'}` },
-    { title: '罚款时间', dataIndex: 'penaltyTime', key: 'penaltyTime', render: (v: string) => v ? dayjs(v).format('YYYY-MM-DD HH:mm') : '-' },
-    { title: '备注', dataIndex: 'comment', key: 'comment' },
-    { title: '操作', key: 'action', render: (_: any, r: any) => <Button type="link" danger onClick={() => handleDelete(r.penaltyId)}>删除</Button> },
-  ];
-
-  if (viewMode === 'list') {
-    return (
-      <div>
-        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
-          <h1>罚款录入</h1>
-          <Button type="primary" onClick={() => setViewMode('create')}>录入罚款</Button>
-        </div>
-        <Table dataSource={data} columns={columns} rowKey="penaltyId" loading={loading} pagination={{...pagination, onChange: (p, s) => loadData(p, s)}} />
-      </div>
-    );
-  }
-
   return (
     <div>
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
         <h1>录入罚款</h1>
-        <Button icon={<UnorderedListOutlined />} onClick={switchToList}>查看历史记录</Button>
+        <Button icon={<UnorderedListOutlined />} onClick={() => navigate('/query?tab=penalty')}>查看历史记录</Button>
       </div>
       <Card>
         <Form form={form} layout="vertical" style={{ maxWidth: 600 }}>
