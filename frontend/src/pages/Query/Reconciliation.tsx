@@ -53,6 +53,12 @@ const Reconciliation = () => {
         </Row>
       </Card>
       {data && (
+        <Card style={{ marginBottom: 16, textAlign: 'center', background: '#fff7e6', border: '1px solid #ffd591' }}>
+          <h2 style={{ margin: 0, color: '#fa8c16' }}>客户未付款：¥{data.unpaidMoney?.toFixed(2) || '0.00'}</h2>
+          <div style={{ color: '#999', fontSize: 12, marginTop: 4 }}>= 发票合计 + 罚款合计 - 汇款合计</div>
+        </Card>
+      )}
+      {data && (
         <Row gutter={16}>
           <Col span={8}><Card title="发票合计">¥{data.invoiceTotalMoney?.toFixed(2) || '0.00'}</Card></Col>
           <Col span={8}><Card title="汇款合计">¥{data.paymentTotalMoney?.toFixed(2) || '0.00'}</Card></Col>
@@ -61,7 +67,6 @@ const Reconciliation = () => {
       )}
       {data && (
         <div style={{marginTop: 16}}>
-          <h3>客户未付款: ¥{data.unpaidMoney?.toFixed(2) || '0.00'}</h3>
           <Row gutter={16}>
             <Col span={8}><h4>发票记录</h4><Table dataSource={data.invoices} columns={invoiceCols} rowKey="invoiceId" size="small" pagination={false} /></Col>
             <Col span={8}><h4>汇款记录</h4><Table dataSource={data.payments} columns={paymentCols} rowKey="paymentId" size="small" pagination={false} /></Col>

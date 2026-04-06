@@ -1,22 +1,40 @@
 import { useEffect, useState } from 'react';
-import { Card, Row, Col, Table } from 'antd';
-import { Column } from '@ant-design/plots';
+import { Card, Row, Col, Table, Radio } from 'antd';
+import { Line } from '@ant-design/plots';
 import api from '../../api';
+
+const TIME_OPTIONS = [
+  { label: '日', value: 'day' },
+  { label: '周', value: 'week' },
+  { label: '月', value: 'month' },
+  { label: '年', value: 'year' },
+];
 
 const Dashboard = () => {
   const [topCustomers, setTopCustomers] = useState([] as any[]);
   const [chartData, setChartData] = useState([] as any[]);
+  const [timeType, setTimeType] = useState('month');
 
   useEffect(() => {
-    loadData();
+    loadCustomers();
   }, []);
 
-  const loadData = async () => {
+  useEffect(() => {
+    loadChartData(timeType);
+  }, [timeType]);
+
+  const loadCustomers = async () => {
     try {
       const customersRes = await api.get('/stats/top-unpaid-customers');
       setTopCustomers(customersRes.data || []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
-      const chartRes = await api.get('/stats/invoice-chart', { params: { type: 'month' } });
+  const loadChartData = async (type: string) => {
+    try {
+      const chartRes = await api.get('/stats/invoice-chart', { params: { type } });
       setChartData(chartRes.data || []);
     } catch (error) {
       console.error(error);
@@ -27,7 +45,14 @@ const Dashboard = () => {
     data: chartData,
     xField: 'date',
     yField: 'count',
-    label: { position: 'middle' as const },
+    point: { shapeField: 'circle', sizeField: 4 },
+    axis: {
+      y: {
+        tickFilter: (datum: number) => Number.isInteger(datum),
+        labelFormatter: (value: number) => String(Math.round(value)),
+      },
+    },
+    style: { lineWidth: 2 },
   };
 
   const columns = [
@@ -46,8 +71,11 @@ const Dashboard = () => {
           </Card>
         </Col>
         <Col span={12}>
-          <Card title="发票数量趋势">
-            {chartData.length > 0 ? <Column {...chartConfig} height={300} /> : <div>暂无数据</div>}
+          <Card
+            title="发票数量趋势"
+            extra={<Radio.Group value={timeType} onChange={(e) => setTimeType(e.target.value)} options={TIME_OPTIONS} optionType="button" buttonStyle="solid" size="small" />}
+          >
+            {chartData.length > 0 ? <Line {...chartConfig} height={300} /> : <div>暂无数据</div>}
           </Card>
         </Col>
       </Row>

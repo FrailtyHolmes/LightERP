@@ -1,13 +1,18 @@
 import { useState, useEffect } from 'react';
-import { Table, Form, Input, Button, Space, DatePicker, message } from 'antd';
+import { Table, Form, Input, Button, Space, DatePicker, InputNumber, Modal, Select, message } from 'antd';
 import dayjs from 'dayjs';
-import { getPenaltyList } from '../../api/penalty';
+import { getPenaltyList, updatePenalty } from '../../api/penalty';
+import { getAllCustomers } from '../../api/customer';
 
 const PenaltyRecord = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
   const [searchForm] = Form.useForm();
+  const [editForm] = Form.useForm();
+  const [editVisible, setEditVisible] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<any>(null);
+  const [customers, setCustomers] = useState([] as any[]);
 
   const loadData = async (page = 1, size = 10, filters?: any) => {
     setLoading(true);
@@ -24,16 +29,52 @@ const PenaltyRecord = () => {
     } finally { setLoading(false); }
   };
 
-  useEffect(() => { loadData(); }, []);
+  const loadCustomers = async () => {
+    try {
+      const res = await getAllCustomers();
+      setCustomers(res.data || []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => { loadData(); loadCustomers(); }, []);
 
   const handleSearch = () => loadData(1, pagination.pageSize);
   const handleReset = () => { searchForm.resetFields(); loadData(1, pagination.pageSize, {}); };
+
+  const handleEdit = (record: any) => {
+    setEditingRecord(record);
+    editForm.setFieldsValue({
+      customerId: record.customerId,
+      penalty: record.penalty,
+      penaltyTime: record.penaltyTime ? dayjs(record.penaltyTime) : undefined,
+      comment: record.comment,
+    });
+    setEditVisible(true);
+  };
+
+  const handleEditSubmit = async () => {
+    try {
+      const values = await editForm.validateFields();
+      await updatePenalty(editingRecord.penaltyId, values);
+      message.success('更新成功');
+      setEditVisible(false);
+      loadData(pagination.current, pagination.pageSize);
+    } catch (error: any) {
+      if (error?.errorFields) return;
+      message.error(error.message || '更新失败');
+    }
+  };
+
   const columns = [
     { title: '客户名', dataIndex: 'customerName', key: 'customerName' },
     { title: '罚款金额', dataIndex: 'penalty', key: 'penalty', render: (v: number) => `¥${v?.toFixed(2)}` },
     { title: '罚款时间', dataIndex: 'penaltyTime', key: 'penaltyTime', render: (v: string) => v ? dayjs(v).format('YYYY-MM-DD HH:mm') : '-' },
     { title: '备注', dataIndex: 'comment', key: 'comment' },
+    { title: '操作', key: 'action', render: (_: any, record: any) => <Button type="link" onClick={() => handleEdit(record)}>编辑</Button> },
   ];
+
   return (
     <div>
       <Form form={searchForm} layout="inline" style={{ marginBottom: 16 }}>
@@ -48,6 +89,22 @@ const PenaltyRecord = () => {
         </Form.Item>
       </Form>
       <Table dataSource={data} columns={columns} rowKey="penaltyId" loading={loading} pagination={{...pagination, onChange: (p, s) => loadData(p, s)}} />
+      <Modal title="编辑罚款记录" open={editVisible} onCancel={() => setEditVisible(false)} onOk={handleEditSubmit} width={500}>
+        <Form form={editForm} layout="vertical">
+          <Form.Item name="customerId" label="客户" rules={[{ required: true }]}>
+            <Select showSearch optionFilterProp="label" placeholder="选择客户" options={customers.map(c => ({ value: c.customerId, label: c.customerName + ' - ' + c.customerAddress }))} />
+          </Form.Item>
+          <Form.Item name="penalty" label="罚款金额" rules={[{ required: true }]}>
+            <InputNumber min={0} style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="penaltyTime" label="罚款时间">
+            <DatePicker style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="comment" label="备注">
+            <Input.TextArea rows={2} placeholder="请输入罚款原因" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };
