@@ -31,7 +31,11 @@ const PaymentList = () => {
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      const values = await form.validateFields();
+      const rawValues = await form.validateFields();
+      const values = {
+        ...rawValues,
+        paymentTime: rawValues.paymentTime ? rawValues.paymentTime.format('YYYY-MM-DD') : undefined,
+      };
       await createPayment(values);
       message.success('提交成功');
       lastValuesRef.current = values;

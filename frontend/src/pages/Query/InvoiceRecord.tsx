@@ -102,7 +102,7 @@ const InvoiceRecord = () => {
       const values = await editForm.validateFields();
       const submitData: any = {
         customerId: values.customerId,
-        invoiceTime: values.invoiceTime,
+        invoiceTime: values.invoiceTime ? values.invoiceTime.format('YYYY-MM-DD') : undefined,
         operater: values.operater,
         comment: values.comment,
         products: editProducts.map(row => ({
@@ -126,18 +126,20 @@ const InvoiceRecord = () => {
     }
   };
 
-  // 编辑产品行操作
+  // 编辑产品行操作（使用函数式更新避免闭包旧值问题）
   const editProductChange = (index: number, field: string, value: any) => {
-    const newRows = [...editProducts];
-    (newRows[index] as any)[field] = value;
-    if (field === 'productPrice' || field === 'productNum') {
-      const price = field === 'productPrice' ? value : newRows[index].productPrice;
-      const num = field === 'productNum' ? value : newRows[index].productNum;
-      if (price && num) {
-        newRows[index].productMoney = price * num;
+    setEditProducts(prevRows => {
+      const newRows = [...prevRows];
+      (newRows[index] as any)[field] = value;
+      if (field === 'productPrice' || field === 'productNum') {
+        const price = field === 'productPrice' ? value : newRows[index].productPrice;
+        const num = field === 'productNum' ? value : newRows[index].productNum;
+        if (price && num) {
+          newRows[index].productMoney = price * num;
+        }
       }
-    }
-    setEditProducts(newRows);
+      return newRows;
+    });
   };
 
   const columns = [
@@ -165,7 +167,7 @@ const InvoiceRecord = () => {
       </Form>
       <Table dataSource={data} columns={columns} rowKey="invoiceId" loading={loading} pagination={{...pagination, onChange: (p, s) => loadData(p, s)}} />
 
-      <Modal title="编辑出库发票" open={editVisible} onCancel={() => setEditVisible(false)} onOk={handleEditSubmit} width={750} destroyOnClose>
+      <Modal title="编辑出库发票" open={editVisible} onCancel={() => setEditVisible(false)} onOk={handleEditSubmit} width={750} afterClose={() => editForm.resetFields()}>
         <Form form={editForm} layout="vertical">
           <Form.Item name="customerId" label="客户" rules={[{ required: true, message: '请选择客户' }]}>
             <Select showSearch optionFilterProp="label" placeholder="选择客户" options={customers.map(c => ({ value: c.customerId, label: c.customerName + ' - ' + c.customerAddress }))} />

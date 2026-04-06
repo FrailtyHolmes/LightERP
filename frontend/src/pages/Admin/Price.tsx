@@ -62,7 +62,12 @@ const PriceAdmin = () => {
   const handleSubmit = async () => {
     try {
       await form.validateFields();
-      const values = form.getFieldsValue();
+      const rawValues = form.getFieldsValue();
+      const values = {
+        ...rawValues,
+        effectiveDateStart: rawValues.effectiveDateStart ? dayjs(rawValues.effectiveDateStart).format('YYYY-MM-DD') : undefined,
+        effectiveDateEnd: rawValues.effectiveDateEnd ? dayjs(rawValues.effectiveDateEnd).format('YYYY-MM-DD') : undefined,
+      };
 
       if (isEditing) {
         await api.put(`/admin/price/${editingRecord.id}`, values);
@@ -87,8 +92,8 @@ const PriceAdmin = () => {
     { title: '客户名', dataIndex: 'customerName', key: 'customerName' },
     { title: '产品名', dataIndex: 'productName', key: 'productName' },
     { title: '单价', dataIndex: 'price', key: 'price', render: (v: number) => v ? `¥${v?.toFixed(2)}` : '未添加单价' },
-    { title: '生效开始', dataIndex: 'effectiveDateStart', key: 'effectiveDateStart' },
-    { title: '生效结束', dataIndex: 'effectiveDateEnd', key: 'effectiveDateEnd' },
+    { title: '生效开始', dataIndex: 'effectiveDateStart', key: 'effectiveDateStart', render: (v: string) => v ? dayjs(v).format('YYYY-MM-DD') : '-' },
+    { title: '生效结束', dataIndex: 'effectiveDateEnd', key: 'effectiveDateEnd', render: (v: string) => v ? dayjs(v).format('YYYY-MM-DD') : '-' },
     { title: '操作', key: 'action', render: (_: any, r: any) => (
       <Space>
         <Button type="link" onClick={() => openEditModal(r)}>编辑</Button>
@@ -115,7 +120,7 @@ const PriceAdmin = () => {
       </Form>
       <div style={{marginBottom: 16}}><Button type="primary" onClick={openAddModal}>添加单价</Button></div>
       <Table dataSource={data} columns={columns} rowKey="id" loading={loading} />
-      <Modal title={isEditing ? '编辑单价' : '添加单价'} open={modalVisible} onCancel={() => { setModalVisible(false); setEditingRecord(null); }} onOk={handleSubmit} destroyOnClose>
+      <Modal title={isEditing ? '编辑单价' : '添加单价'} open={modalVisible} onCancel={() => { setModalVisible(false); setEditingRecord(null); }} onOk={handleSubmit} afterClose={() => form.resetFields()}>
         <Form form={form} layout="vertical">
           <Form.Item name="customerId" label="客户" rules={[{required: true}]}><Select disabled={isEditing} options={customers.map(c => ({value: c.customerId, label: c.customerName}))} /></Form.Item>
           <Form.Item name="productId" label="产品" rules={[{required: true}]}><Select disabled={isEditing} options={products.map(p => ({value: p.productId, label: p.productName}))} /></Form.Item>

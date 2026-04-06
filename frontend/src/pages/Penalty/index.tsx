@@ -31,7 +31,11 @@ const PenaltyList = () => {
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      const values = await form.validateFields();
+      const rawValues = await form.validateFields();
+      const values = {
+        ...rawValues,
+        penaltyTime: rawValues.penaltyTime ? rawValues.penaltyTime.format('YYYY-MM-DD') : undefined,
+      };
       await createPenalty(values);
       message.success('提交成功');
       lastValuesRef.current = values;

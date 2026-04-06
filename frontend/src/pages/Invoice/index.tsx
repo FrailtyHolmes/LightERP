@@ -97,19 +97,21 @@ const InvoiceList = () => {
     setTotalMoney(total);
   }, [showShipping, form]);
 
-  // 自动查询单价
+  // 自动查询单价（使用函数式更新避免闭包旧值问题）
   const fetchProductPrice = async (rowIndex: number, customerId: number, productId: number) => {
     try {
       const res = await getProductPrice(customerId, productId);
       if (res.data != null) {
-        const newRows = [...productRows];
-        newRows[rowIndex] = { ...newRows[rowIndex], productPrice: res.data };
-        // 自动计算出库金额
-        if (newRows[rowIndex].productNum) {
-          newRows[rowIndex].productMoney = res.data * newRows[rowIndex].productNum!;
-        }
-        setProductRows(newRows);
-        recalcTotals(newRows);
+        const price = res.data;
+        setProductRows(prevRows => {
+          const newRows = [...prevRows];
+          newRows[rowIndex] = { ...newRows[rowIndex], productPrice: price };
+          if (newRows[rowIndex].productNum) {
+            newRows[rowIndex].productMoney = price * newRows[rowIndex].productNum!;
+          }
+          recalcTotals(newRows);
+          return newRows;
+        });
       }
     } catch {
       // 查不到价格，不处理
@@ -118,9 +120,12 @@ const InvoiceList = () => {
 
   // 产品选择变化
   const handleProductChange = (rowIndex: number, productId: number) => {
-    const newRows = [...productRows];
-    newRows[rowIndex] = { ...newRows[rowIndex], productId, productPrice: undefined, productMoney: undefined };
-    setProductRows(newRows);
+    setProductRows(prevRows => {
+      const newRows = [...prevRows];
+      newRows[rowIndex] = { ...newRows[rowIndex], productId, productPrice: undefined, productMoney: undefined };
+      recalcTotals(newRows);
+      return newRows;
+    });
 
     const customerId = form.getFieldValue('customerId');
     if (customerId && productId) {
@@ -130,10 +135,13 @@ const InvoiceList = () => {
 
   // 客户变化时，重新查询所有已选产品的单价
   const handleCustomerChange = (customerId: number) => {
-    productRows.forEach((row, index) => {
-      if (row.productId && customerId) {
-        fetchProductPrice(index, customerId, row.productId);
-      }
+    setProductRows(prevRows => {
+      prevRows.forEach((row, index) => {
+        if (row.productId && customerId) {
+          fetchProductPrice(index, customerId, row.productId);
+        }
+      });
+      return prevRows;
     });
   };
 
