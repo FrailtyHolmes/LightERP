@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Table, Form, Input, Button, Space, DatePicker, InputNumber, Modal, Select, message } from 'antd';
+import { Table, Form, Input, Button, Space, DatePicker, InputNumber, Modal, Select, message, Tooltip } from 'antd';
+import { DownloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { getPenaltyList, updatePenalty, deletePenalty } from '../../api/penalty';
 import { getAllCustomers } from '../../api/customer';
@@ -97,19 +98,33 @@ const PenaltyRecord = () => {
     )},
   ];
 
+  const handleExport = () => {
+    const formValues = searchForm.getFieldsValue();
+    const params = new URLSearchParams();
+    if (formValues.customerName) params.append('customerName', formValues.customerName);
+    if (formValues.penaltyTimeStart) params.append('penaltyTimeStart', formValues.penaltyTimeStart.format('YYYY-MM-DD'));
+    if (formValues.penaltyTimeEnd) params.append('penaltyTimeEnd', formValues.penaltyTimeEnd.format('YYYY-MM-DD'));
+    window.open(`/api/v1/export/penalty?${params.toString()}`);
+  };
+
   return (
     <div>
-      <Form form={searchForm} layout="inline" style={{ marginBottom: 16 }}>
-        <Form.Item name="customerName"><Input placeholder="客户名" allowClear /></Form.Item>
-        <Form.Item name="penaltyTimeStart"><DatePicker placeholder="罚款开始日期" /></Form.Item>
-        <Form.Item name="penaltyTimeEnd"><DatePicker placeholder="罚款结束日期" /></Form.Item>
-        <Form.Item>
-          <Space>
-            <Button type="primary" onClick={handleSearch}>搜索</Button>
-            <Button onClick={handleReset}>重置</Button>
-          </Space>
-        </Form.Item>
-      </Form>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+        <Form form={searchForm} layout="inline">
+          <Form.Item name="customerName"><Input placeholder="客户名" allowClear /></Form.Item>
+          <Form.Item name="penaltyTimeStart"><DatePicker placeholder="罚款开始日期" /></Form.Item>
+          <Form.Item name="penaltyTimeEnd"><DatePicker placeholder="罚款结束日期" /></Form.Item>
+          <Form.Item>
+            <Space>
+              <Button type="primary" onClick={handleSearch}>搜索</Button>
+              <Button onClick={handleReset}>重置</Button>
+            </Space>
+          </Form.Item>
+        </Form>
+        <Tooltip title="导出当前筛选结果为Excel">
+          <Button icon={<DownloadOutlined />} onClick={handleExport}>导出</Button>
+        </Tooltip>
+      </div>
       <Table dataSource={data} columns={columns} rowKey="penaltyId" loading={loading} pagination={{...pagination, onChange: (p, s) => loadData(p, s)}} />
       <Modal title="编辑罚款记录" open={editVisible} onCancel={() => setEditVisible(false)} onOk={handleEditSubmit} width={500}>
         <Form form={editForm} layout="vertical">

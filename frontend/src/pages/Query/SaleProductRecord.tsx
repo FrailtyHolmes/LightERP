@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Table, Form, Input, Button, Space, Select, message } from 'antd';
+import { Table, Form, Input, Button, Space, Select, message, Tooltip } from 'antd';
+import { DownloadOutlined } from '@ant-design/icons';
 import api from '../../api';
 import { getAllCustomers } from '../../api/customer';
 
@@ -46,23 +47,37 @@ const SaleProductRecord = () => {
     { title: '出库金额', dataIndex: 'productMoney', key: 'productMoney', render: (v: number) => `¥${v?.toFixed(2)}` },
     { title: '开票人', dataIndex: 'operater', key: 'operater' },
   ];
+  const handleExport = () => {
+    const formValues = searchForm.getFieldsValue();
+    const params = new URLSearchParams();
+    if (formValues.customerId) params.append('customerId', formValues.customerId.toString());
+    if (formValues.productId) params.append('productId', formValues.productId.toString());
+    if (formValues.operater) params.append('operater', formValues.operater);
+    window.open(`/api/v1/export/sale-product?${params.toString()}`);
+  };
+
   return (
     <div>
-      <Form form={searchForm} layout="inline" style={{ marginBottom: 16 }}>
-        <Form.Item name="customerId">
-          <Select placeholder="选择客户" allowClear style={{ width: 160 }} options={customers.map(c => ({value: c.customerId, label: c.customerName}))} />
-        </Form.Item>
-        <Form.Item name="productId">
-          <Select placeholder="选择产品" allowClear style={{ width: 160 }} options={products.map(p => ({value: p.productId, label: p.productName}))} />
-        </Form.Item>
-        <Form.Item name="operater"><Input placeholder="开票人" allowClear /></Form.Item>
-        <Form.Item>
-          <Space>
-            <Button type="primary" onClick={handleSearch}>搜索</Button>
-            <Button onClick={handleReset}>重置</Button>
-          </Space>
-        </Form.Item>
-      </Form>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+        <Form form={searchForm} layout="inline">
+          <Form.Item name="customerId">
+            <Select placeholder="选择客户" allowClear style={{ width: 160 }} options={customers.map(c => ({value: c.customerId, label: c.customerName}))} />
+          </Form.Item>
+          <Form.Item name="productId">
+            <Select placeholder="选择产品" allowClear style={{ width: 160 }} options={products.map(p => ({value: p.productId, label: p.productName}))} />
+          </Form.Item>
+          <Form.Item name="operater"><Input placeholder="开票人" allowClear /></Form.Item>
+          <Form.Item>
+            <Space>
+              <Button type="primary" onClick={handleSearch}>搜索</Button>
+              <Button onClick={handleReset}>重置</Button>
+            </Space>
+          </Form.Item>
+        </Form>
+        <Tooltip title="导出当前筛选结果为Excel">
+          <Button icon={<DownloadOutlined />} onClick={handleExport}>导出</Button>
+        </Tooltip>
+      </div>
       <div style={{marginBottom: 8, fontWeight: 'bold'}}>总金额: ¥{pagination.totalMoney?.toFixed(2) || '0.00'}</div>
       <Table dataSource={data} columns={columns} rowKey="id" loading={loading} pagination={{...pagination, onChange: (p, s) => loadData(p, s)}} />
     </div>

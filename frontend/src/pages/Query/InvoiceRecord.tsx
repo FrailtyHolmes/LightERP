@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Table, Form, Input, Button, Space, DatePicker, InputNumber, Select, Modal, Card, Divider, Typography, message } from 'antd';
-import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
+import { PlusOutlined, MinusCircleOutlined, DownloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { getInvoiceList, getInvoiceDetail, updateInvoice, deleteInvoice } from '../../api/invoice';
 import { getAllCustomers } from '../../api/customer';
@@ -185,6 +185,7 @@ const InvoiceRecord = () => {
     { title: '操作', key: 'action', render: (_: any, record: any) => (
       <Space>
         <Button type="link" onClick={() => handleEdit(record.invoiceId)}>编辑</Button>
+        <Button type="link" icon={<DownloadOutlined />} onClick={() => window.open(`/api/v1/export/invoice/${record.invoiceId}`)}>导出</Button>
         <Button type="link" danger onClick={() => handleDelete(record.invoiceId)}>删除</Button>
       </Space>
     )},
