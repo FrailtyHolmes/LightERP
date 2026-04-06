@@ -163,6 +163,10 @@ public class SaleInvoiceController {
         if (customerId != null) {
             wrapper.eq("customer_id", customerId);
         }
+        if (StringUtils.hasText(invoiceTimeStart) && StringUtils.hasText(invoiceTimeEnd)
+                && invoiceTimeStart.compareTo(invoiceTimeEnd) > 0) {
+            throw new BusinessException("开始日期不能晚于结束日期");
+        }
         if (StringUtils.hasText(invoiceTimeStart)) {
             wrapper.ge("invoice_time", invoiceTimeStart);
         }

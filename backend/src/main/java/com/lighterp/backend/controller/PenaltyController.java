@@ -85,6 +85,10 @@ public class PenaltyController {
         if (customerId != null) {
             wrapper.eq("customer_id", customerId);
         }
+        if (StringUtils.hasText(penaltyTimeStart) && StringUtils.hasText(penaltyTimeEnd)
+                && penaltyTimeStart.compareTo(penaltyTimeEnd) > 0) {
+            throw new BusinessException("开始日期不能晚于结束日期");
+        }
         if (StringUtils.hasText(penaltyTimeStart)) {
             wrapper.ge("penalty_time", penaltyTimeStart);
         }

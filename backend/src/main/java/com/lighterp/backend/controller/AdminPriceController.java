@@ -58,6 +58,10 @@ public class AdminPriceController {
         if (productId != null) {
             wrapper.eq("product_id", productId);
         }
+        if (StringUtils.hasText(effectiveDateStart) && StringUtils.hasText(effectiveDateEnd)
+                && effectiveDateStart.compareTo(effectiveDateEnd) > 0) {
+            throw new BusinessException("开始日期不能晚于结束日期");
+        }
         if (StringUtils.hasText(effectiveDateStart)) {
             wrapper.ge("effective_date_start", effectiveDateStart);
         }

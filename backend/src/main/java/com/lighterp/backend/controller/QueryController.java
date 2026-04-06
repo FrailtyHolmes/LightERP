@@ -58,6 +58,10 @@ public class QueryController {
         if (productId != null) {
             wrapper.eq("product_id", productId);
         }
+        if (StringUtils.hasText(invoiceTimeStart) && StringUtils.hasText(invoiceTimeEnd)
+                && invoiceTimeStart.compareTo(invoiceTimeEnd) > 0) {
+            throw new BusinessException("开始日期不能晚于结束日期");
+        }
         if (StringUtils.hasText(operater)) {
             wrapper.like("operater", operater);
         }
@@ -110,6 +114,11 @@ public class QueryController {
             @RequestParam Long customerId,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate) {
+
+        if (StringUtils.hasText(startDate) && StringUtils.hasText(endDate)
+                && startDate.compareTo(endDate) > 0) {
+            throw new BusinessException("开始日期不能晚于结束日期");
+        }
 
         // 检查客户是否存在
         CustomerInfo customer = customerInfoMapper.selectById(customerId);

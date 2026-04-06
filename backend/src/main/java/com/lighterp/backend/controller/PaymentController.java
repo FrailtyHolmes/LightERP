@@ -85,6 +85,10 @@ public class PaymentController {
         if (customerId != null) {
             wrapper.eq("customer_id", customerId);
         }
+        if (StringUtils.hasText(paymentTimeStart) && StringUtils.hasText(paymentTimeEnd)
+                && paymentTimeStart.compareTo(paymentTimeEnd) > 0) {
+            throw new BusinessException("开始日期不能晚于结束日期");
+        }
         if (StringUtils.hasText(paymentTimeStart)) {
             wrapper.ge("payment_time", paymentTimeStart);
         }
