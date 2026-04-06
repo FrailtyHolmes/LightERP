@@ -8,6 +8,7 @@ import com.lighterp.backend.mapper.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -98,14 +99,14 @@ public class ExportController {
     public void exportPayment(
             @RequestParam(required = false) Long customerId,
             @RequestParam(required = false) String customerName,
-            @RequestParam(required = false) Date paymentTimeStart,
-            @RequestParam(required = false) Date paymentTimeEnd,
+            @RequestParam(required = false) String paymentTimeStart,
+            @RequestParam(required = false) String paymentTimeEnd,
             HttpServletResponse response) throws Exception {
 
         QueryWrapper<CustomerPayment> wrapper = new QueryWrapper<>();
         if (customerId != null) wrapper.eq("customer_id", customerId);
-        if (paymentTimeStart != null) wrapper.ge("payment_time", paymentTimeStart);
-        if (paymentTimeEnd != null) wrapper.le("payment_time", paymentTimeEnd);
+        if (StringUtils.hasText(paymentTimeStart)) wrapper.ge("payment_time", paymentTimeStart);
+        if (StringUtils.hasText(paymentTimeEnd)) wrapper.le("payment_time", paymentTimeEnd);
 
         if (customerName != null) {
             List<CustomerInfo> customers = customerInfoMapper.selectList(
@@ -154,14 +155,14 @@ public class ExportController {
     public void exportPenalty(
             @RequestParam(required = false) Long customerId,
             @RequestParam(required = false) String customerName,
-            @RequestParam(required = false) Date penaltyTimeStart,
-            @RequestParam(required = false) Date penaltyTimeEnd,
+            @RequestParam(required = false) String penaltyTimeStart,
+            @RequestParam(required = false) String penaltyTimeEnd,
             HttpServletResponse response) throws Exception {
 
         QueryWrapper<CustomerPenalty> wrapper = new QueryWrapper<>();
         if (customerId != null) wrapper.eq("customer_id", customerId);
-        if (penaltyTimeStart != null) wrapper.ge("penalty_time", penaltyTimeStart);
-        if (penaltyTimeEnd != null) wrapper.le("penalty_time", penaltyTimeEnd);
+        if (StringUtils.hasText(penaltyTimeStart)) wrapper.ge("penalty_time", penaltyTimeStart);
+        if (StringUtils.hasText(penaltyTimeEnd)) wrapper.le("penalty_time", penaltyTimeEnd);
 
         if (customerName != null) {
             List<CustomerInfo> customers = customerInfoMapper.selectList(
@@ -209,8 +210,8 @@ public class ExportController {
     public void exportSaleProduct(
             @RequestParam(required = false) Long customerId,
             @RequestParam(required = false) Long productId,
-            @RequestParam(required = false) Date invoiceTimeStart,
-            @RequestParam(required = false) Date invoiceTimeEnd,
+            @RequestParam(required = false) String invoiceTimeStart,
+            @RequestParam(required = false) String invoiceTimeEnd,
             @RequestParam(required = false) String operater,
             HttpServletResponse response) throws Exception {
 
@@ -264,8 +265,8 @@ public class ExportController {
     @GetMapping("/reconciliation")
     public void exportReconciliation(
             @RequestParam Long customerId,
-            @RequestParam(required = false) Date startDate,
-            @RequestParam(required = false) Date endDate,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
             HttpServletResponse response) throws Exception {
 
         CustomerInfo customer = customerInfoMapper.selectById(customerId);
@@ -276,22 +277,22 @@ public class ExportController {
         // 查询发票
         QueryWrapper<SaleInvoice> invoiceWrapper = new QueryWrapper<>();
         invoiceWrapper.eq("customer_id", customerId);
-        if (startDate != null) invoiceWrapper.ge("invoice_time", startDate);
-        if (endDate != null) invoiceWrapper.le("invoice_time", endDate);
+        if (StringUtils.hasText(startDate)) invoiceWrapper.ge("invoice_time", startDate);
+        if (StringUtils.hasText(endDate)) invoiceWrapper.le("invoice_time", endDate);
         List<SaleInvoice> invoices = saleInvoiceMapper.selectList(invoiceWrapper);
 
         // 查询汇款
         QueryWrapper<CustomerPayment> paymentWrapper = new QueryWrapper<>();
         paymentWrapper.eq("customer_id", customerId);
-        if (startDate != null) paymentWrapper.ge("payment_time", startDate);
-        if (endDate != null) paymentWrapper.le("payment_time", endDate);
+        if (StringUtils.hasText(startDate)) paymentWrapper.ge("payment_time", startDate);
+        if (StringUtils.hasText(endDate)) paymentWrapper.le("payment_time", endDate);
         List<CustomerPayment> payments = customerPaymentMapper.selectList(paymentWrapper);
 
         // 查询罚款
         QueryWrapper<CustomerPenalty> penaltyWrapper = new QueryWrapper<>();
         penaltyWrapper.eq("customer_id", customerId);
-        if (startDate != null) penaltyWrapper.ge("penalty_time", startDate);
-        if (endDate != null) penaltyWrapper.le("penalty_time", endDate);
+        if (StringUtils.hasText(startDate)) penaltyWrapper.ge("penalty_time", startDate);
+        if (StringUtils.hasText(endDate)) penaltyWrapper.le("penalty_time", endDate);
         List<CustomerPenalty> penalties = customerPenaltyMapper.selectList(penaltyWrapper);
 
         // 汇总

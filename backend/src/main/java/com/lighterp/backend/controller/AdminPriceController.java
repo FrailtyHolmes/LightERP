@@ -44,8 +44,8 @@ public class AdminPriceController {
     public CommonResult<PageResult<CustomerProductPriceResponse>> list(
             @RequestParam(required = false) Long customerId,
             @RequestParam(required = false) Long productId,
-            @RequestParam(required = false) Date effectiveDateStart,
-            @RequestParam(required = false) Date effectiveDateEnd,
+            @RequestParam(required = false) String effectiveDateStart,
+            @RequestParam(required = false) String effectiveDateEnd,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer pageSize) {
 
@@ -58,10 +58,10 @@ public class AdminPriceController {
         if (productId != null) {
             wrapper.eq("product_id", productId);
         }
-        if (effectiveDateStart != null) {
+        if (StringUtils.hasText(effectiveDateStart)) {
             wrapper.ge("effective_date_start", effectiveDateStart);
         }
-        if (effectiveDateEnd != null) {
+        if (StringUtils.hasText(effectiveDateEnd)) {
             wrapper.le("effective_date_end", effectiveDateEnd);
         }
 
@@ -115,6 +115,12 @@ public class AdminPriceController {
             throw new BusinessException("该产品未注册，请先注册");
         }
 
+        // 校验生效日期：开始日期必须早于结束日期
+        if (request.getEffectiveDateStart() != null && request.getEffectiveDateEnd() != null
+                && request.getEffectiveDateStart().after(request.getEffectiveDateEnd())) {
+            throw new BusinessException("生效开始日期不能晚于生效结束日期");
+        }
+
         // 检查是否已存在未删除的同维度记录
         QueryWrapper<CustomerProductPrice> wrapper = new QueryWrapper<>();
         wrapper.eq("customer_id", request.getCustomerId())
@@ -155,10 +161,27 @@ public class AdminPriceController {
             throw new BusinessException("单价记录不存在");
         }
 
-        BeanUtils.copyProperties(request, price);
+        // 校验生效日期：开始日期必须早于结束日期
+        Date effectiveStart = request.getEffectiveDateStart() != null ? request.getEffectiveDateStart() : price.getEffectiveDateStart();
+        Date effectiveEnd = request.getEffectiveDateEnd() != null ? request.getEffectiveDateEnd() : price.getEffectiveDateEnd();
+        if (effectiveStart != null && effectiveEnd != null && effectiveStart.after(effectiveEnd)) {
+            throw new BusinessException("生效开始日期不能晚于生效结束日期");
+        }
+
+        // 仅更新允许修改的字段，避免 BeanUtils.copyProperties 覆盖 id 等关键字段
+        if (request.getPrice() != null) {
+            price.setPrice(request.getPrice());
+        }
+        if (request.getEffectiveDateStart() != null) {
+            price.setEffectiveDateStart(request.getEffectiveDateStart());
+        }
+        if (request.getEffectiveDateEnd() != null) {
+            price.setEffectiveDateEnd(request.getEffectiveDateEnd());
+        }
+
         priceMapper.updateById(price);
 
-        log.info("编辑单价: {}", id);
+        log.info("编辑单价: id={}, customerId={}, productId={}", id, price.getCustomerId(), price.getProductId());
         return CommonResult.success();
     }
 

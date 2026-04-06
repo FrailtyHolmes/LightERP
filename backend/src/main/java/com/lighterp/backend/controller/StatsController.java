@@ -12,6 +12,7 @@ import com.lighterp.backend.mapper.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -118,25 +119,33 @@ public class StatsController {
     @GetMapping("/invoice-chart")
     public CommonResult<List<Map<String, Object>>> invoiceChart(
             @RequestParam String type,
-            @RequestParam(required = false) Date startDate,
-            @RequestParam(required = false) Date endDate) {
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate) {
 
-        if (startDate == null || endDate == null) {
+        Date parsedStartDate = null;
+        Date parsedEndDate = null;
+
+        if (StringUtils.hasText(startDate) && StringUtils.hasText(endDate)) {
+            try {
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                parsedStartDate = dateFormat.parse(startDate);
+                parsedEndDate = dateFormat.parse(endDate);
+            } catch (Exception e) {
+                throw new BusinessException("日期格式不正确，请使用 yyyy-MM-dd 格式");
+            }
+        }
+
+        if (parsedStartDate == null || parsedEndDate == null) {
             // 设置默认日期范围
             Calendar cal = Calendar.getInstance();
-            endDate = cal.getTime();
+            parsedEndDate = cal.getTime();
             cal.add(type.equals("day") ? Calendar.HOUR : type.equals("week") ? Calendar.DAY_OF_MONTH : Calendar.MONTH, -1);
-            startDate = cal.getTime();
+            parsedStartDate = cal.getTime();
         }
 
         QueryWrapper<SaleInvoice> wrapper = new QueryWrapper<>();
-        // 查询所有未删除的记录
-        if (startDate != null) {
-            wrapper.ge("created_time", startDate);
-        }
-        if (endDate != null) {
-            wrapper.le("created_time", endDate);
-        }
+        wrapper.ge("created_time", parsedStartDate);
+        wrapper.le("created_time", parsedEndDate);
 
         List<SaleInvoice> invoices = saleInvoiceMapper.selectList(wrapper);
 

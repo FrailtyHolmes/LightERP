@@ -43,8 +43,8 @@ public class QueryController {
     public CommonResult<PageResult<SaleProductResponse>> listSaleProduct(
             @RequestParam(required = false) Long customerId,
             @RequestParam(required = false) Long productId,
-            @RequestParam(required = false) Date invoiceTimeStart,
-            @RequestParam(required = false) Date invoiceTimeEnd,
+            @RequestParam(required = false) String invoiceTimeStart,
+            @RequestParam(required = false) String invoiceTimeEnd,
             @RequestParam(required = false) String operater,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer pageSize) {
@@ -108,8 +108,8 @@ public class QueryController {
     @GetMapping("/reconciliation")
     public CommonResult<CustomerReconciliationResponse> reconciliation(
             @RequestParam Long customerId,
-            @RequestParam(required = false) Date startDate,
-            @RequestParam(required = false) Date endDate) {
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate) {
 
         // 检查客户是否存在
         CustomerInfo customer = customerInfoMapper.selectById(customerId);
@@ -124,10 +124,10 @@ public class QueryController {
         // 查询发票记录
         QueryWrapper<SaleInvoice> invoiceWrapper = new QueryWrapper<>();
         invoiceWrapper.eq("customer_id", customerId);
-        if (startDate != null) {
+        if (StringUtils.hasText(startDate)) {
             invoiceWrapper.ge("invoice_time", startDate);
         }
-        if (endDate != null) {
+        if (StringUtils.hasText(endDate)) {
             invoiceWrapper.le("invoice_time", endDate);
         }
         List<SaleInvoice> invoices = saleInvoiceMapper.selectList(invoiceWrapper);
@@ -165,10 +165,10 @@ public class QueryController {
         // 查询汇款记录
         QueryWrapper<CustomerPayment> paymentWrapper = new QueryWrapper<>();
         paymentWrapper.eq("customer_id", customerId);
-        if (startDate != null) {
+        if (StringUtils.hasText(startDate)) {
             paymentWrapper.ge("payment_time", startDate);
         }
-        if (endDate != null) {
+        if (StringUtils.hasText(endDate)) {
             paymentWrapper.le("payment_time", endDate);
         }
         List<CustomerPayment> payments = customerPaymentMapper.selectList(paymentWrapper);
@@ -189,10 +189,10 @@ public class QueryController {
         // 查询罚款记录
         QueryWrapper<CustomerPenalty> penaltyWrapper = new QueryWrapper<>();
         penaltyWrapper.eq("customer_id", customerId);
-        if (startDate != null) {
+        if (StringUtils.hasText(startDate)) {
             penaltyWrapper.ge("penalty_time", startDate);
         }
-        if (endDate != null) {
+        if (StringUtils.hasText(endDate)) {
             penaltyWrapper.le("penalty_time", endDate);
         }
         List<CustomerPenalty> penalties = customerPenaltyMapper.selectList(penaltyWrapper);

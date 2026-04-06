@@ -63,6 +63,14 @@ const PriceAdmin = () => {
     try {
       await form.validateFields();
       const rawValues = form.getFieldsValue();
+
+      // 校验：生效开始日期 < 生效结束日期
+      if (rawValues.effectiveDateStart && rawValues.effectiveDateEnd &&
+          dayjs(rawValues.effectiveDateStart).isAfter(dayjs(rawValues.effectiveDateEnd))) {
+        message.warning('生效开始日期不能晚于生效结束日期');
+        return;
+      }
+
       const values = {
         ...rawValues,
         effectiveDateStart: rawValues.effectiveDateStart ? dayjs(rawValues.effectiveDateStart).format('YYYY-MM-DD') : undefined,
